@@ -1,0 +1,10 @@
+shard 1: 1150/1500
+shard 1: 1200/1500
+shard 1: 1250/1500
+shard 1: 1300/1500
+shard 1: 1350/1500
+shard 1: 1400/1500
+shard 1: 1450/1500
+shard 1: 1500/1500
+uploaded s3://datasets/teacher/shard-1.jsonl
+done

@@ -1,0 +1,781 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Command Parser Playground</title>
+<style>
+:root{
+  --bg:#f5f6f8; --surface:#ffffff; --ink:#1a1d23; --muted:#667085; --line:#e2e5ea;
+  --accent:#2f6fed; --accent-ink:#ffffff; --ok:#1a8f4c; --warn:#a96a0a; --bad:#c53030;
+  --chip:#eaf0ff; --ring:#ffe8a3;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0f1115; --surface:#181b21; --ink:#e8eaee; --muted:#98a1b0; --line:#2a2f38;
+    --accent:#6b9bff; --accent-ink:#0b1220; --ok:#46c37b; --warn:#e0a84a; --bad:#f06a6a;
+    --chip:#222a44; --ring:#4a3d12;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:20px;margin:0 0 2px}
+.sub{color:var(--muted);margin:0 0 16px}
+h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;font-weight:600}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:820px){.grid{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+.row{display:flex;gap:8px;align-items:center}
+input[type=text],select{flex:1;min-width:0;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:9px 14px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+button:disabled{opacity:.5;cursor:not-allowed}
+button.mic.live{background:var(--bad);color:#fff;border-color:var(--bad)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{font-size:12.5px;padding:4px 10px;border-radius:999px;background:var(--chip);border:0;color:var(--ink)}
+.status{min-height:20px;margin-top:8px;color:var(--muted);font-size:13px}
+.status.err{color:var(--bad)}
+details{margin-top:12px;color:var(--muted);font-size:13px}
+details .row{margin-top:8px}
+details label{width:70px;flex:none}
+pre{margin:0;padding:10px 12px;background:var(--bg);border:1px solid var(--line);border-radius:8px;white-space:pre-wrap;word-break:break-word;font:13px/1.45 ui-monospace,Menlo,Consolas,monospace}
+.badges{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.badge{font-size:12px;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.badge.ok{color:var(--ok);border-color:var(--ok)}
+.badge.bad{color:var(--bad);border-color:var(--bad)}
+.badge.warn{color:var(--warn);border-color:var(--warn)}
+table.slots{width:100%;border-collapse:collapse;margin-top:6px}
+table.slots td{padding:6px 4px;border-top:1px solid var(--line)}
+table.slots td:first-child{color:var(--muted);width:90px}
+.null{color:var(--muted);font-style:italic}
+.intent{display:inline-block;font:600 13px ui-monospace,Menlo,Consolas,monospace;background:var(--chip);padding:3px 10px;border-radius:6px}
+ul.plain{list-style:none;margin:0;padding:0}
+ul.plain li{padding:8px 0;border-top:1px solid var(--line);display:flex;gap:10px;align-items:center}
+ul.plain li:first-child{border-top:0}
+ul.plain li .grow{flex:1;min-width:0}
+ul.plain li small{display:block;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+li.hit{background:var(--ring);border-radius:8px;padding-left:8px;padding-right:8px}
+li.past{opacity:.55}
+.x{padding:2px 9px;line-height:1.2;color:var(--muted)}
+.empty{color:var(--muted);font-style:italic}
+/* clock */
+.clockrow{display:flex;gap:16px;align-items:center}
+svg.clock{width:96px;height:96px;flex:none}
+.clock .face{fill:var(--bg);stroke:var(--line);stroke-width:2}
+.clock .tick{stroke:var(--muted);stroke-width:1.5}
+.clock .hand{stroke:var(--ink);stroke-linecap:round}
+.clock .sec{stroke:var(--accent);stroke-width:1}
+.big{font-size:30px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.1}
+.muted{color:var(--muted)}
+.ringing{display:none;margin-top:12px;padding:12px;border-radius:10px;background:var(--ring);border:1px solid var(--warn);animation:pulse 1s infinite}
+.ringing.on{display:block}
+@keyframes pulse{50%{opacity:.6}}
+/* action panel */
+.action p{margin:6px 0}
+.alarmcard{display:flex;align-items:center;gap:14px;margin-top:10px;padding:12px 14px;border:1px solid var(--line);border-radius:10px}
+.alarmcard .big{font-size:34px}
+.note{margin-top:8px;color:var(--warn);font-size:13px}
+/* calendar */
+.calhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center}
+.cal .dow{font-size:11px;color:var(--muted);padding:2px 0}
+.cal .d{aspect-ratio:1/0.82;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px;font-size:13px;position:relative}
+.cal .d.today{border:2px solid var(--accent);font-weight:700}
+.cal .d.has::after{content:"";width:5px;height:5px;border-radius:50%;background:var(--accent);position:absolute;bottom:4px}
+.cal .d.hit{background:var(--ring)}
+@media (prefers-reduced-motion:reduce){.ringing{animation:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Command Parser Playground</h1>
+  <p class="sub">Type or speak a command. The teacher model (phi3.5 via Ollama) turns it into JSON, and the page acts it out on a toy clock and calendar. Personal testing only.</p>
+
+  <div class="grid">
+    <div>
+      <div class="card">
+        <h2>Command</h2>
+        <form id="form" class="row" autocomplete="off">
+          <input type="text" id="cmd" placeholder="e.g. set an alarm for seven thirty am tomorrow" aria-label="Command" autofocus>
+          <button type="button" class="mic" id="mic" title="Speak a command" aria-label="Speak a command">Mic</button>
+          <button type="submit" class="primary" id="go">Parse</button>
+        </form>
+        <div class="status" id="status" role="status"></div>
+        <div class="chips" id="examples"></div>
+        <details>
+          <summary>Backend settings</summary>
+          <div class="row"><label for="backend">Backend</label>
+            <select id="backend">
+              <option value="ollama">Ollama teacher (phi3.5)</option>
+              <option value="service">Deployed service (POST /parse)</option>
+            </select></div>
+          <div class="row" id="rowOllama"><label for="ollamaUrl">Ollama</label><input type="text" id="ollamaUrl" value="http://localhost:11434"></div>
+          <div class="row" id="rowModel"><label for="model">Model</label><input type="text" id="model" value="phi3.5"></div>
+          <div class="row" id="rowService" hidden><label for="svcUrl">Service</label><input type="text" id="svcUrl" value="http://localhost:8080"></div>
+        </details>
+      </div>
+
+      <div class="card">
+        <h2>Model output</h2>
+        <div id="resultEmpty" class="empty">Nothing yet.</div>
+        <div id="result" hidden>
+          <pre id="raw"></pre>
+          <div class="badges" id="badges"></div>
+          <div><span class="intent" id="intent"></span></div>
+          <table class="slots"><tbody id="slots"></tbody></table>
+          <div class="note" id="warnings"></div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <h2>Clock</h2>
+        <div class="clockrow">
+          <svg class="clock" viewBox="0 0 100 100" aria-hidden="true">
+            <circle class="face" cx="50" cy="50" r="47"/>
+            <g id="ticks"></g>
+            <line class="hand" id="hH" x1="50" y1="50" x2="50" y2="28" stroke-width="4"/>
+            <line class="hand" id="hM" x1="50" y1="50" x2="50" y2="17" stroke-width="3"/>
+            <line class="sec" id="hS" x1="50" y1="54" x2="50" y2="12"/>
+          </svg>
+          <div>
+            <div class="big" id="digital">--:--:--</div>
+            <div class="muted" id="today"></div>
+          </div>
+        </div>
+        <div class="ringing" id="ringing" role="alert">
+          <strong id="ringText">Alarm!</strong>
+          <div class="row" style="margin-top:8px">
+            <button id="snooze">Snooze 5 min</button>
+            <button id="dismiss" class="primary">Dismiss</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card action">
+        <h2>What the assistant does</h2>
+        <div id="actionEmpty" class="empty">Parse a command to see its effect.</div>
+        <div id="action" hidden></div>
+      </div>
+
+      <div class="card">
+        <h2>Alarms</h2>
+        <ul class="plain" id="alarmList"></ul>
+      </div>
+
+      <div class="card">
+        <h2>Calendar</h2>
+        <div class="calhead">
+          <button id="prev" aria-label="Previous month">&lsaquo;</button>
+          <strong id="monthTitle"></strong>
+          <button id="next" aria-label="Next month">&rsaquo;</button>
+        </div>
+        <div class="cal" id="cal"></div>
+        <ul class="plain" id="eventList" style="margin-top:12px"></ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ==== PARSERS BEGIN ====
+// Pure helpers: no DOM access, so they can be tested from node.
+const KEYS = ["intent", "date", "time", "place"];
+const INTENTS = ["alarm_set","alarm_query","calendar_set","calendar_query","calendar_remove","weather_query","datetime_query","recommendation_events"];
+const MONTHS = {january:0,february:1,march:2,april:3,may:4,june:5,july:6,august:7,september:8,october:9,november:10,december:11,jan:0,feb:1,mar:2,apr:3,jun:5,jul:6,aug:7,sep:8,sept:8,oct:9,nov:10,dec:11};
+const WEEKDAYS = {sunday:0,monday:1,tuesday:2,wednesday:3,thursday:4,friday:5,saturday:6,sun:0,mon:1,tue:2,tues:2,wed:3,thu:4,thur:4,thurs:4,fri:5,sat:6};
+const ONES = {zero:0,oh:0,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16,seventeen:17,eighteen:18,nineteen:19,
+  first:1,second:2,third:3,fourth:4,fifth:5,sixth:6,seventh:7,eighth:8,ninth:9,tenth:10,eleventh:11,twelfth:12,thirteenth:13,fourteenth:14,fifteenth:15,sixteenth:16,seventeenth:17,eighteenth:18,nineteenth:19,twentieth:20,thirtieth:30};
+const TENS = {twenty:20,thirty:30,forty:40,fifty:50};
+const TIMEZONES = {"tokyo":"Asia/Tokyo","london":"Europe/London","new york":"America/New_York","new york city":"America/New_York","washington":"America/New_York","boston":"America/New_York","chicago":"America/Chicago","los angeles":"America/Los_Angeles","san francisco":"America/Los_Angeles","seattle":"America/Los_Angeles","toronto":"America/Toronto","paris":"Europe/Paris","berlin":"Europe/Berlin","madrid":"Europe/Madrid","rome":"Europe/Rome","moscow":"Europe/Moscow","dubai":"Asia/Dubai","delhi":"Asia/Kolkata","new delhi":"Asia/Kolkata","mumbai":"Asia/Kolkata","bangalore":"Asia/Kolkata","singapore":"Asia/Singapore","hong kong":"Asia/Hong_Kong","beijing":"Asia/Shanghai","shanghai":"Asia/Shanghai","seoul":"Asia/Seoul","sydney":"Australia/Sydney","melbourne":"Australia/Melbourne","cairo":"Africa/Cairo","sao paulo":"America/Sao_Paulo"};
+
+const startOfDay = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+const dkey = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+const fromKey = k => { const [y, m, d] = k.split("-").map(Number); return new Date(y, m - 1, d); };
+const fmtDay = d => d.toLocaleDateString(undefined, {weekday: "short", day: "numeric", month: "short", year: "numeric"});
+const fmtTime = d => d.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"});
+const fmtRange = r => sameDay(r.start, r.end) ? fmtDay(r.start) : fmtDay(r.start) + " to " + fmtDay(r.end);
+const inRange = (d, r) => { const s = startOfDay(d); return s >= r.start && s <= r.end; };
+
+function normalizeCommand(s) {
+  return s.toLowerCase().replace(/\b([ap])\.\s?m\b\.?/g, "$1m").replace(/[^a-z0-9' ]+/g, " ").replace(/\s+/g, " ").trim();
+}
+function tokenize(s) {
+  return s.toLowerCase().replace(/[^a-z0-9:' ]+/g, " ").split(/\s+/).filter(Boolean);
+}
+// Read a number (digits, "twenty five", "fifth") starting at token i.
+function num(tk, i) {
+  const t = tk[i];
+  if (t === undefined) return null;
+  const m = /^(\d+)(st|nd|rd|th)?$/.exec(t);
+  if (m) return {n: +m[1], len: 1};
+  if (t in TENS) {
+    const nx = tk[i + 1];
+    if (nx !== undefined && nx in ONES && ONES[nx] >= 1 && ONES[nx] < 10) return {n: TENS[t] + ONES[nx], len: 2};
+    return {n: TENS[t], len: 1};
+  }
+  if (t in ONES) return {n: ONES[t], len: 1};
+  return null;
+}
+function weekdayOf(t) {
+  if (t in WEEKDAYS) return WEEKDAYS[t];
+  if (t.endsWith("s") && t.slice(0, -1) in WEEKDAYS) return WEEKDAYS[t.slice(0, -1)];
+  return undefined;
+}
+
+// Time slot -> {kind:"rel", at} | {kind:"clock", h, m, ampm} | null
+function parseTime(s, now) {
+  if (!s) return null;
+  const low = s.toLowerCase();
+  const tk = tokenize(low);
+  for (let i = 0; i < tk.length; i++) {            // "five minutes from now", "after five hours"
+    let n = null, len = 0;
+    if (tk[i] === "half" && tk[i + 1] === "an" && /^hour/.test(tk[i + 2] || "")) return {kind: "rel", at: new Date(now.getTime() + 30 * 60000)};
+    if ((tk[i] === "an" || tk[i] === "a") && /^(hour|hr|minute|min)/.test(tk[i + 1] || "")) { n = 1; len = 1; }
+    else { const r = num(tk, i); if (r) { n = r.n; len = r.len; } }
+    if (n !== null) {
+      const u = tk[i + len] || "";
+      if (/^(minute|min)/.test(u)) return {kind: "rel", at: new Date(now.getTime() + n * 60000)};
+      if (/^(hour|hr)/.test(u)) return {kind: "rel", at: new Date(now.getTime() + n * 3600000)};
+    }
+  }
+  if (/\bnoon\b/.test(low)) return {kind: "clock", h: 12, m: 0, ampm: "pm"};
+  if (/\bmidnight\b/.test(low)) return {kind: "clock", h: 12, m: 0, ampm: "am"};
+  const mer = (/\b([ap])\.?\s?m\b/.exec(low) || [])[1];
+  let ampm = mer ? (mer === "a" ? "am" : "pm") : null;
+  if (!ampm) {
+    if (/\b(morning|dawn|daybreak|sunrise)\b/.test(low)) ampm = "am";
+    else if (/\b(afternoon|evening|night|tonight)\b/.test(low)) ampm = "pm";
+  }
+  let h = null, m = 0;
+  for (let i = 0; i < tk.length; i++) {
+    const t = tk[i];
+    if ((t === "oh" || t === "zero") && num(tk, i + 1)) { if (!ampm) ampm = "am"; continue; }   // "oh seven hundred"
+    let mm = /^(\d{1,2}):(\d{2})$/.exec(t);
+    if (mm) { h = +mm[1]; m = +mm[2]; break; }
+    if (/^\d{3,4}$/.test(t) && Math.floor(+t / 100) <= 24 && +t % 100 < 60) { h = Math.floor(+t / 100); m = +t % 100; break; }
+    if (t === "half" && tk[i + 1] === "past") { const r = num(tk, i + 2); if (r) { h = r.n; m = 30; break; } }
+    if (t === "quarter" && (tk[i + 1] === "past" || tk[i + 1] === "to")) {
+      const r = num(tk, i + 2);
+      if (r) { if (tk[i + 1] === "past") { h = r.n; m = 15; } else { h = r.n - 1 || 12; m = 45; } break; }
+    }
+    const r = num(tk, i);
+    if (r && !/^\d+(st|nd|rd|th)$/.test(t)) {
+      h = r.n;
+      const j = i + r.len;
+      if (tk[j] === "hundred") m = 0;
+      else if (tk[j] === "oh" || tk[j] === "o") { const r2 = num(tk, j + 1); if (r2 && r2.n < 10) m = r2.n; }
+      else { const r2 = num(tk, j); if (r2 && r2.n < 60 && !/^(minute|min|hour|hr)/.test(tk[j + r2.len] || "")) m = r2.n; }
+      break;
+    }
+  }
+  if (h === null || h > 24 || m > 59) return null;
+  if (h > 12 || h === 0) ampm = "24";
+  return {kind: "clock", h, m, ampm};
+}
+function clockCandidates(t, dayStart) {
+  const mk = hh => new Date(dayStart.getFullYear(), dayStart.getMonth(), dayStart.getDate(), hh, t.m);
+  if (t.ampm === "am") return [mk(t.h % 12)];
+  if (t.ampm === "pm") return [mk(t.h % 12 + 12)];
+  if (t.ampm === "24") return [mk(t.h % 24)];
+  return [mk(t.h % 12), mk(t.h % 12 + 12)];
+}
+// Pick a concrete Date for a clock time. `day` is a start-of-day Date or null (= next occurrence).
+function resolveClock(t, day, now) {
+  const ambiguous = !t.ampm;
+  if (!day) {
+    for (let k = 0; k < 3; k++) {
+      const c = clockCandidates(t, addDays(startOfDay(now), k)).find(x => x > now);
+      if (c) return {at: c, assumed: ambiguous};
+    }
+  }
+  const c = clockCandidates(t, day);
+  if (c.length === 1) return {at: c[0], assumed: false};
+  if (sameDay(day, now)) return {at: c.find(x => x > now) || c[1], assumed: true};
+  return {at: (t.h >= 5 && t.h <= 11) ? c[0] : c[1], assumed: true};   // guess am for 5-11, otherwise pm
+}
+
+// Date slot -> {start, end, recurring} (start-of-day Dates) | null
+function parseDate(s, now) {
+  if (!s) return null;
+  const tk = tokenize(s);
+  const J = " " + tk.join(" ") + " ";
+  const has = w => tk.includes(w);
+  const today = startOfDay(now);
+  const recurring = /\b(every|daily|weekly|weekdays|monthly)\b/.test(J);
+  const one = d => ({start: d, end: d, recurring});
+  const range = (a, b) => ({start: a, end: b, recurring});
+  const monthRange = (y, mo) => range(new Date(y, mo, 1), new Date(y, mo + 1, 0));
+  const mondayOf = d => addDays(d, -((d.getDay() + 6) % 7));
+
+  if (J.includes(" day after tomorrow ")) return one(addDays(today, 2));
+  if (has("tomorrow")) return one(addDays(today, 1));
+  if (has("yesterday")) return one(addDays(today, -1));
+  if (has("today") || has("tonight")) return one(today);
+
+  const mi = tk.findIndex(t => t in MONTHS);
+  if (mi >= 0) {
+    const month = MONTHS[tk[mi]];
+    let day = null;
+    const after = num(tk, mi + 1);
+    if (after && after.n >= 1 && after.n <= 31) day = after.n;
+    else {
+      const end = tk[mi - 1] === "of" ? mi - 1 : mi;
+      for (let i = Math.max(0, end - 3); i < end; i++) {
+        const r = num(tk, i);
+        if (r && i + r.len === end && r.n >= 1 && r.n <= 31) { day = r.n; break; }
+      }
+    }
+    let y = today.getFullYear();
+    if (day) { let d = new Date(y, month, day); if (d < today) d = new Date(y + 1, month, day); return one(d); }
+    let r = monthRange(y, month);
+    if (r.end < today) r = monthRange(y + 1, month);
+    return r;
+  }
+  if (J.includes(" next month ")) return monthRange(today.getFullYear(), today.getMonth() + 1);
+  if (J.includes(" this month ")) return monthRange(today.getFullYear(), today.getMonth());
+
+  if (has("weekend")) {
+    const dow = today.getDay();
+    let start = dow === 0 ? today : addDays(today, (6 - dow + 7) % 7);
+    let end = dow === 0 ? today : addDays(start, 1);
+    const shift = J.includes(" after next ") ? 14 : has("next") ? 7 : 0;
+    return range(addDays(start, shift), addDays(end, shift));
+  }
+  if (has("week")) {
+    if (has("next")) { const m = addDays(mondayOf(today), 7); return range(m, addDays(m, 6)); }
+    return range(today, addDays(mondayOf(today), 6));
+  }
+  for (const t of tk) {
+    const w = weekdayOf(t);
+    if (w !== undefined) {
+      let diff = (w - today.getDay() + 7) % 7;
+      if (has("next")) diff += 7;
+      return one(addDays(today, diff));
+    }
+  }
+  for (let i = 0; i < tk.length; i++) {
+    const r = num(tk, i);
+    if (r && /^day/.test(tk[i + r.len] || "")) {
+      return (has("next") || has("coming")) ? range(today, addDays(today, r.n)) : one(addDays(today, r.n));
+    }
+  }
+  return null;
+}
+
+// Check a model reply against the project schema. `command` is the original text.
+function checkReply(raw, command) {
+  let obj;
+  try { obj = JSON.parse(raw); } catch (e) { return {ok: false, problems: ["not valid JSON"], warnings: []}; }
+  if (obj === null || typeof obj !== "object" || Array.isArray(obj)) return {ok: false, problems: ["not a JSON object"], warnings: []};
+  const problems = [], warnings = [];
+  if (Object.keys(obj).sort().join(",") !== KEYS.slice().sort().join(",")) problems.push("keys are not exactly intent, date, time, place");
+  if (!INTENTS.includes(obj.intent)) problems.push("intent is not one of the eight");
+  for (const k of ["date", "time", "place"]) {
+    const v = obj[k];
+    if (v === null || v === undefined) continue;
+    if (typeof v !== "string") problems.push(k + " is neither a string nor null");
+    else if (!command.toLowerCase().includes(v.toLowerCase())) warnings.push(k + ' "' + v + '" does not appear in the command (clean.py would reject this record)');
+  }
+  return {ok: problems.length === 0, obj, problems, warnings};
+}
+function buildOllamaBody(model, template, command) {
+  return {
+    model, prompt: template.replace("{command}", command), stream: false,
+    options: {temperature: 0, seed: 42, num_predict: 128, stop: ["\n"]}
+  };
+}
+// ==== PARSERS END ====
+
+// ---------- state ----------
+const $ = id => document.getElementById(id);
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+let alarms = store.get("alarms", []);
+let events = store.get("events", []);
+let hits = {alarms: new Set(), events: new Set(), days: new Set()};
+let view = {y: new Date().getFullYear(), m: new Date().getMonth()};
+let template = null;
+let ringingAlarm = null;
+let liveTz = null;
+const uid = () => Math.random().toString(36).slice(2, 9);
+const save = () => { store.set("alarms", alarms); store.set("events", events); };
+
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+function setStatus(msg, isErr) { const s = $("status"); s.textContent = msg || ""; s.className = "status" + (isErr ? " err" : ""); }
+
+// ---------- clock + alarms ringing ----------
+for (let i = 0; i < 12; i++) {
+  const a = i * 30 * Math.PI / 180, r1 = i % 3 === 0 ? 38 : 41, r2 = 45;
+  const ln = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  ln.setAttribute("class", "tick");
+  ln.setAttribute("x1", 50 + r1 * Math.sin(a)); ln.setAttribute("y1", 50 - r1 * Math.cos(a));
+  ln.setAttribute("x2", 50 + r2 * Math.sin(a)); ln.setAttribute("y2", 50 - r2 * Math.cos(a));
+  $("ticks").appendChild(ln);
+}
+let audio = null;
+function beep() {
+  try {
+    audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+    for (let i = 0; i < 3; i++) {
+      const o = audio.createOscillator(), g = audio.createGain();
+      o.frequency.value = 880; g.gain.value = 0.12;
+      o.connect(g); g.connect(audio.destination);
+      o.start(audio.currentTime + i * 0.4); o.stop(audio.currentTime + i * 0.4 + 0.2);
+    }
+  } catch (e) {}
+}
+function tick() {
+  const now = new Date();
+  $("hH").style.transform = "rotate(" + ((now.getHours() % 12) * 30 + now.getMinutes() / 2) + "deg)";
+  $("hM").style.transform = "rotate(" + (now.getMinutes() * 6 + now.getSeconds() / 10) + "deg)";
+  $("hS").style.transform = "rotate(" + now.getSeconds() * 6 + "deg)";
+  for (const id of ["hH", "hM", "hS"]) $(id).style.transformOrigin = "50px 50px";
+  $("digital").textContent = now.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit", second: "2-digit"});
+  $("today").textContent = fmtDay(now);
+  const live = document.querySelector("[data-live-tz]");
+  if (live) live.textContent = now.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: liveTz || undefined});
+  for (const a of alarms) {
+    const at = new Date(a.at);
+    if (a.on && !a.fired && now >= at && now - at < 10 * 60000) {
+      a.fired = true; save(); renderAlarms();
+      ringingAlarm = a;
+      $("ringText").textContent = "Alarm: " + fmtTime(at) + "  (" + a.label + ")";
+      $("ringing").classList.add("on");
+      beep();
+    }
+  }
+}
+$("dismiss").onclick = () => { $("ringing").classList.remove("on"); ringingAlarm = null; };
+$("snooze").onclick = () => {
+  if (ringingAlarm) {
+    alarms.push({id: uid(), at: new Date(Date.now() + 5 * 60000).toISOString(), label: "snooze: " + ringingAlarm.label, on: true, fired: false});
+    save(); renderAlarms();
+  }
+  $("dismiss").onclick();
+};
+setInterval(tick, 1000);
+
+function until(at) {
+  const ms = at - new Date();
+  if (ms <= 0) return "passed";
+  const mins = Math.round(ms / 60000);
+  if (mins < 60) return "in " + mins + " min";
+  const h = Math.floor(mins / 60);
+  return h < 48 ? "in " + h + " h " + (mins % 60) + " min" : "in " + Math.round(h / 24) + " days";
+}
+function renderAlarms() {
+  const ul = $("alarmList");
+  ul.replaceChildren();
+  if (!alarms.length) { ul.appendChild(el("li", "empty", "No alarms. Try: set an alarm for seven am tomorrow")); return; }
+  const sorted = alarms.slice().sort((a, b) => new Date(a.at) - new Date(b.at));
+  for (const a of sorted) {
+    const at = new Date(a.at);
+    const li = el("li", (hits.alarms.has(a.id) ? "hit " : "") + (a.fired || at < new Date() ? "past" : ""));
+    const cb = document.createElement("input");
+    cb.type = "checkbox"; cb.checked = a.on; cb.setAttribute("aria-label", "Alarm enabled");
+    cb.onchange = () => { a.on = cb.checked; save(); };
+    const mid = el("div", "grow");
+    const t = el("strong", "", fmtTime(at) + "  ");
+    t.appendChild(el("span", "muted", fmtDay(at)));
+    mid.append(t, el("small", "", (a.fired ? "rang" : until(at)) + " · " + a.label));
+    const x = el("button", "x", "×"); x.title = "Delete"; x.setAttribute("aria-label", "Delete alarm");
+    x.onclick = () => { alarms = alarms.filter(z => z !== a); save(); renderAlarms(); };
+    li.append(cb, mid, x);
+    ul.appendChild(li);
+  }
+}
+
+// ---------- calendar ----------
+function renderCalendar() {
+  const {y, m} = view;
+  $("monthTitle").textContent = new Date(y, m, 1).toLocaleDateString(undefined, {month: "long", year: "numeric"});
+  const cal = $("cal");
+  cal.replaceChildren();
+  for (const d of ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]) cal.appendChild(el("div", "dow", d));
+  const first = new Date(y, m, 1), offset = (first.getDay() + 6) % 7, n = new Date(y, m + 1, 0).getDate();
+  for (let i = 0; i < offset; i++) cal.appendChild(el("div"));
+  const evDays = new Set(events.map(e => e.dateKey));
+  const todayKey = dkey(new Date());
+  for (let d = 1; d <= n; d++) {
+    const k = dkey(new Date(y, m, d));
+    cal.appendChild(el("div", "d" + (k === todayKey ? " today" : "") + (evDays.has(k) ? " has" : "") + (hits.days.has(k) ? " hit" : ""), String(d)));
+  }
+  const ul = $("eventList");
+  ul.replaceChildren();
+  if (!events.length) { ul.appendChild(el("li", "empty", "No events. Try: add dentist appointment to my calendar for friday")); return; }
+  const sorted = events.slice().sort((a, b) => (a.dateKey || "9").localeCompare(b.dateKey || "9") || (a.time || "").localeCompare(b.time || ""));
+  for (const e of sorted) {
+    const past = e.dateKey && fromKey(e.dateKey) < startOfDay(new Date());
+    const li = el("li", (hits.events.has(e.id) ? "hit " : "") + (past ? "past" : ""));
+    const mid = el("div", "grow");
+    mid.append(el("strong", "", e.dateKey ? fmtDay(fromKey(e.dateKey)) + (e.time ? "  " + e.time : "") : "No date"), el("small", "", e.text));
+    const x = el("button", "x", "×"); x.title = "Delete"; x.setAttribute("aria-label", "Delete event");
+    x.onclick = () => { events = events.filter(z => z !== e); save(); renderCalendar(); };
+    li.append(mid, x);
+    ul.appendChild(li);
+  }
+}
+$("prev").onclick = () => { view = view.m === 0 ? {y: view.y - 1, m: 11} : {y: view.y, m: view.m - 1}; renderCalendar(); };
+$("next").onclick = () => { view = view.m === 11 ? {y: view.y + 1, m: 0} : {y: view.y, m: view.m + 1}; renderCalendar(); };
+function showMonthOf(d) { view = {y: d.getFullYear(), m: d.getMonth()}; }
+
+// ---------- acting out an intent ----------
+function applyIntent(obj, command) {
+  const now = new Date();
+  const date = parseDate(obj.date, now);
+  const time = parseTime(obj.time, now);
+  const lines = [], notes = [];
+  let widget = null;
+  hits = {alarms: new Set(), events: new Set(), days: new Set()};
+  liveTz = null;
+  if (obj.date && !date) notes.push('Could not understand the date "' + obj.date + '".');
+  if (obj.time && !time) notes.push('Could not understand the time "' + obj.time + '".');
+  if (date && date.recurring) notes.push("Recurring schedules (every / daily / weekly) are not supported; this creates a single entry.");
+  if (date && !sameDay(date.start, date.end) && (obj.intent === "alarm_set" || obj.intent === "calendar_set")) notes.push("The date is a range; using its first day.");
+
+  switch (obj.intent) {
+    case "alarm_set": {
+      if (!time) { lines.push("No usable time was given, so no alarm was created."); break; }
+      let at, assumed = false;
+      if (time.kind === "rel") at = time.at;
+      else ({at, assumed} = resolveClock(time, date ? date.start : null, now));
+      alarms.push({id: uid(), at: at.toISOString(), label: command, on: true, fired: false});
+      save();
+      lines.push("Created an alarm for " + fmtDay(at) + " at " + fmtTime(at) + " (" + until(at) + ").");
+      if (assumed) notes.push('"' + obj.time + '" has no am/pm, so ' + fmtTime(at) + " was assumed.");
+      if (at < now) notes.push("That moment is in the past, so the alarm will not ring.");
+      widget = {type: "alarm", at};
+      showMonthOf(at);
+      break;
+    }
+    case "alarm_query": {
+      let list = alarms;
+      if (date) list = list.filter(a => inRange(new Date(a.at), date));
+      if (time && time.kind === "clock") {
+        const after = /\bafter\b/.test(obj.time || ""), before = /\bbefore\b/.test(obj.time || "");
+        list = list.filter(a => {
+          const d = new Date(a.at), c = clockCandidates(time, startOfDay(d)).map(x => x.getHours() * 60 + x.getMinutes()), mins = d.getHours() * 60 + d.getMinutes();
+          return c.some(v => after ? mins >= v : before ? mins <= v : mins === v);
+        });
+      }
+      list.forEach(a => hits.alarms.add(a.id));
+      lines.push("Looked up alarms" + (date ? " for " + fmtRange(date) : "") + (time ? " at " + (obj.time) : "") + ": " + (list.length ? list.length + " found (highlighted below)." : "none found."));
+      break;
+    }
+    case "calendar_set": {
+      let dateKey = null, tm = null;
+      if (date) dateKey = dkey(date.start);
+      if (time && time.kind === "clock") {
+        const {at, assumed} = resolveClock(time, date ? date.start : startOfDay(now), now);
+        tm = fmtTime(at);
+        if (assumed) notes.push('"' + obj.time + '" has no am/pm, so ' + tm + " was assumed.");
+      } else if (time && time.kind === "rel") tm = fmtTime(time.at);
+      const ev = {id: uid(), text: command, dateKey, time: tm};
+      events.push(ev); save();
+      hits.events.add(ev.id);
+      if (dateKey) { hits.days.add(dateKey); showMonthOf(date.start); }
+      lines.push(dateKey ? "Added an event on " + fmtDay(date.start) + (tm ? " at " + tm : "") + ": “" + command + "”." : "No date was given, so the event was saved without a date: “" + command + "”.");
+      break;
+    }
+    case "calendar_query": {
+      let list = events;
+      if (date) list = list.filter(e => e.dateKey && inRange(fromKey(e.dateKey), date));
+      list.forEach(e => { hits.events.add(e.id); if (e.dateKey) hits.days.add(e.dateKey); });
+      if (date) showMonthOf(date.start);
+      lines.push("Looked up events" + (date ? " for " + fmtRange(date) : "") + ": " + (list.length ? list.length + " found (highlighted below)." : "none found."));
+      break;
+    }
+    case "calendar_remove": {
+      const todayStart = startOfDay(now);
+      let gone;
+      if (date) gone = events.filter(e => e.dateKey && inRange(fromKey(e.dateKey), date));
+      else if (/\b(all|everything|every)\b/.test(command)) gone = events.slice();
+      else {
+        const upcoming = events.filter(e => e.dateKey && fromKey(e.dateKey) >= todayStart).sort((a, b) => a.dateKey.localeCompare(b.dateKey) || (a.time || "").localeCompare(b.time || ""));
+        gone = upcoming.slice(0, 1);
+        if (gone.length) notes.push("No date was given, so the next upcoming event was removed.");
+      }
+      events = events.filter(e => !gone.includes(e)); save();
+      lines.push(gone.length ? "Removed " + gone.length + " event" + (gone.length > 1 ? "s" : "") + (date ? " in " + fmtRange(date) : "") + ": " + gone.map(e => "“" + e.text + "”").join(", ") + "." : "Nothing to remove" + (date ? " in " + fmtRange(date) : "") + ".");
+      if (date) showMonthOf(date.start);
+      break;
+    }
+    case "weather_query":
+      lines.push("Would look up the weather for " + (obj.place || "your current location") + (date ? " on " + fmtRange(date) : obj.date ? " (" + obj.date + ")" : " right now") + ".");
+      notes.push("No weather service is connected in this playground, so no forecast is shown.");
+      widget = {type: "weather", place: obj.place, when: date ? fmtRange(date) : "now"};
+      break;
+    case "datetime_query": {
+      const tz = obj.place ? TIMEZONES[obj.place.toLowerCase()] : null;
+      if (obj.place && !tz) notes.push('Time zone for "' + obj.place + '" is not in this page\'s small city list, so local time is shown.');
+      liveTz = tz || null;
+      lines.push("Reading the clock" + (tz ? " in " + obj.place + " (" + tz + ")" : " (your local time)") + ".");
+      widget = {type: "time", tz};
+      break;
+    }
+    case "recommendation_events":
+      lines.push("Would search for events near " + (obj.place || "you") + (date ? " during " + fmtRange(date) : obj.date ? " (" + obj.date + ")" : "") + ".");
+      notes.push("No event-listing service is connected in this playground, so no suggestions are shown.");
+      widget = {type: "events", place: obj.place, when: date ? fmtRange(date) : null};
+      break;
+  }
+  renderAction(obj.intent, lines, notes, widget);
+  renderAlarms(); renderCalendar(); tick();
+}
+function renderAction(intent, lines, notes, widget) {
+  $("actionEmpty").hidden = true;
+  const box = $("action");
+  box.hidden = false;
+  box.replaceChildren();
+  box.appendChild(el("span", "intent", intent));
+  for (const l of lines) box.appendChild(el("p", "", l));
+  if (widget && widget.type === "alarm") {
+    const c = el("div", "alarmcard");
+    c.append(el("div", "big", fmtTime(widget.at)), el("div", "muted", fmtDay(widget.at) + "\nRings " + until(widget.at)));
+    c.lastChild.style.whiteSpace = "pre-line";
+    box.appendChild(c);
+  } else if (widget && widget.type === "time") {
+    const c = el("div", "alarmcard"), big = el("div", "big", "");
+    big.setAttribute("data-live-tz", "1");
+    const d = el("div", "muted", "");
+    d.textContent = new Date().toLocaleDateString(undefined, {weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: widget.tz || undefined});
+    c.append(big, d);
+    box.appendChild(c);
+  } else if (widget && (widget.type === "weather" || widget.type === "events")) {
+    const c = el("div", "alarmcard");
+    c.append(el("div", "big", widget.type === "weather" ? "Weather" : "Events"), el("div", "muted", (widget.place || "here") + (widget.when ? " · " + widget.when : "")));
+    box.appendChild(c);
+  }
+  for (const n of notes) box.appendChild(el("div", "note", n));
+}
+
+// ---------- backends ----------
+async function getTemplate() {
+  if (template) return template;
+  let res;
+  try { res = await fetch("../prompts/teacher_prompt.txt"); } catch (e) { res = null; }
+  if (!res || !res.ok) throw new Error("Could not load ../prompts/teacher_prompt.txt. Serve the project folder over http (python3 -m http.server 8000) and open http://localhost:8000/playground/");
+  template = await res.text();
+  return template;
+}
+async function callBackend(command) {
+  const t0 = performance.now();
+  if ($("backend").value === "service") {
+    const res = await fetch($("svcUrl").value.replace(/\/$/, "") + "/parse", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({text: command})});
+    const raw = await res.text();
+    return {raw, ms: performance.now() - t0, httpStatus: res.status, version: res.headers.get("X-Model-Version"), pod: res.headers.get("X-Served-By")};
+  }
+  const body = buildOllamaBody($("model").value.trim() || "phi3.5", await getTemplate(), command);
+  const res = await fetch($("ollamaUrl").value.replace(/\/$/, "") + "/api/generate", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
+  if (!res.ok) throw new Error("Ollama returned HTTP " + res.status + ": " + (await res.text()).slice(0, 200));
+  const j = await res.json();
+  return {raw: j.response, ms: performance.now() - t0, httpStatus: res.status};
+}
+function badge(text, cls) { return el("span", "badge " + (cls || ""), text); }
+function showResult(command, r) {
+  const chk = checkReply(r.raw, command);
+  $("resultEmpty").hidden = true; $("result").hidden = false;
+  $("raw").textContent = r.raw;
+  const b = $("badges");
+  b.replaceChildren();
+  b.appendChild(badge(chk.ok && r.httpStatus === 200 ? "valid JSON, four keys" : "invalid", chk.ok && r.httpStatus === 200 ? "ok" : "bad"));
+  b.appendChild(badge(Math.round(r.ms) + " ms"));
+  if (r.httpStatus !== 200) b.appendChild(badge("HTTP " + r.httpStatus, "bad"));
+  if (r.version) b.appendChild(badge("model " + r.version));
+  if (r.pod) b.appendChild(badge("pod " + r.pod));
+  $("warnings").textContent = chk.problems.concat(chk.warnings).join("\n");
+  $("warnings").style.whiteSpace = "pre-line";
+  $("intent").textContent = chk.obj && typeof chk.obj.intent === "string" ? chk.obj.intent : "(no intent)";
+  const tb = $("slots");
+  tb.replaceChildren();
+  for (const k of ["date", "time", "place"]) {
+    const tr = document.createElement("tr");
+    const v = chk.obj ? chk.obj[k] : undefined;
+    tr.append(el("td", "", k), v === null || v === undefined ? el("td", "null", "null") : el("td", "", String(v)));
+    tb.appendChild(tr);
+  }
+  if (chk.ok && r.httpStatus === 200) applyIntent(chk.obj, command);
+  else {
+    $("actionEmpty").hidden = true;
+    const box = $("action"); box.hidden = false; box.replaceChildren();
+    box.appendChild(el("p", "", "The reply was not valid, so nothing was done. (The deployed service would answer HTTP 500 with {\"error\": \"invalid_model_output\"} in this case.)"));
+  }
+}
+
+// ---------- input ----------
+let busy = false;
+async function submit() {
+  const command = normalizeCommand($("cmd").value);
+  if (!command || busy) return;
+  busy = true; $("go").disabled = true;
+  $("cmd").value = command;
+  setStatus("Asking the model…");
+  try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
+  try {
+    const r = await callBackend(command);
+    setStatus("");
+    showResult(command, r);
+  } catch (e) {
+    setStatus((e && e.message || String(e)) + ($("backend").value === "ollama" ? " — is Ollama running? (ollama serve)" : ""), true);
+  } finally { busy = false; $("go").disabled = false; }
+}
+$("form").addEventListener("submit", ev => { ev.preventDefault(); submit(); });
+
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+if (!SR) {
+  $("mic").disabled = true;
+  $("mic").title = "Speech recognition is not available in this browser (try Chrome or Edge)";
+} else {
+  const rec = new SR();
+  rec.lang = "en-US"; rec.interimResults = true; rec.continuous = false;
+  rec.onresult = e => {
+    let t = "";
+    for (const r of e.results) t += r[0].transcript;
+    $("cmd").value = normalizeCommand(t);
+    if (e.results[e.results.length - 1].isFinal) submit();
+  };
+  rec.onend = () => $("mic").classList.remove("live");
+  rec.onerror = e => { $("mic").classList.remove("live"); setStatus("Speech recognition error: " + e.error, true); };
+  $("mic").onclick = () => {
+    if ($("mic").classList.contains("live")) { rec.stop(); return; }
+    try { setStatus("Listening…"); rec.start(); $("mic").classList.add("live"); } catch (e) {}
+  };
+}
+
+const EXAMPLES = ["set an alarm for seven thirty am tomorrow", "set an alarm for five minutes from now", "what alarms do i have set for tomorrow",
+  "add dentist appointment to my calendar for friday", "what are my plans for this week", "cancel the next meeting",
+  "what time is it in tokyo", "what is the weather in london", "what events are happening in los angeles"];
+for (const ex of EXAMPLES) {
+  const b = el("button", "chip", ex); b.type = "button";
+  b.onclick = () => { $("cmd").value = ex; submit(); };
+  $("examples").appendChild(b);
+}
+
+// settings persistence
+for (const id of ["backend", "ollamaUrl", "model", "svcUrl"]) {
+  const saved = store.get("cfg_" + id, null);
+  if (saved !== null) $(id).value = saved;
+  $(id).addEventListener("change", () => { store.set("cfg_" + id, $(id).value); syncRows(); });
+}
+function syncRows() {
+  const svc = $("backend").value === "service";
+  $("rowOllama").hidden = svc; $("rowModel").hidden = svc; $("rowService").hidden = !svc;
+}
+syncRows(); renderAlarms(); renderCalendar(); tick();
+{ const q = new URLSearchParams(location.search).get("q"); if (q) { $("cmd").value = q; submit(); } }   // ?q=... runs a command on load
+</script>
+</body>
+</html>

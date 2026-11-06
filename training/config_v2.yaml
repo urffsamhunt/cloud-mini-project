@@ -1,0 +1,30 @@
+# Everything that defines a training run. `make train` reads only this file
+# (plus SUBSET=N on the command line, which trains on the first N records to check that it runs).
+version: v2                      # second model version, used for the rolling update in Task 4
+seed: 42                         # fixes shuffling, initialisation of nothing random in the model head, and dropout (none)
+model_name: EleutherAI/pythia-70m
+device: cpu                      # the assignment requires CPU training
+
+train_data: data/v1/train.jsonl  # copy of datasets/v1/train.jsonl from `make dataset`; its checksum is verified
+train_checksum: data/v1/train.sha256
+max_train_examples: 1500         # the first 1,500 records of the cleaned dataset (the assignment's limit)
+
+learning_rate: 0.0002
+batch_size: 16
+epochs: 6                        # one more epoch than v1
+max_seq_len: 128                 # longest example in the data is 65 tokens
+warmup_ratio: 0.1
+weight_decay: 0.0
+loss_on_reply_only: true         # the loss ignores the "Command: ...\nJSON:" part and scores only the teacher's reply
+
+out_dir: out/models              # model and tokenizer are saved in <out_dir>/<version>/
+loss_csv: training/loss_v2.csv      # one line per epoch
+
+libraries:                       # versions the results were produced with (pinned in training/requirements.txt)
+  python: "3.13"
+  torch: 2.15.0+cpu
+  transformers: 5.22.1
+  numpy: 2.5.4
+  pyyaml: 6.0.3
+  safetensors: 0.8.0
+  tokenizers: 0.23.3

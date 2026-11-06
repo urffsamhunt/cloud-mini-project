@@ -1,0 +1,16 @@
+{
+  "shard_files": [
+    "teacher/shard-0.jsonl",
+    "teacher/shard-1.jsonl"
+  ],
+  "counts": {
+    "input": 3000,
+    "a_invalid_json": 4,
+    "b_wrong_keys": 1,
+    "c_bad_intent": 2,
+    "d_slot_not_in_command": 40,
+    "e_duplicates": 50,
+    "kept": 2903
+  },
+  "sha256": "dfcdc41d3394eea969e4b9bcb7fb7210fd5798ccc2979242f1bdc2d1d2b6671f"
+}

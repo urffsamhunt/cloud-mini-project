@@ -1,0 +1,9 @@
+apiVersion: k3d.io/v1alpha5
+kind: Simple
+metadata:
+  name: cloud
+servers: 1
+agents: 0
+ports:
+  - port: 8080:80            # host:8080 -> Traefik. The load test uses this later.
+    nodeFilters: [loadbalancer]
