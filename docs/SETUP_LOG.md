@@ -40,12 +40,24 @@ Commands that matter for reproduction live in `Makefile` and `docs/SETUP.md`.
 | 25 | Trained v2 (same settings, 6 epochs): loss 0.485, 0.295, 0.179, 0.106, 0.054, 0.024. Uploaded to `models/v2/` and verified (`a775ecc5…eba1`). Validation: validity 100, intent 85, date 79, time 93, place 87, full frame 51. | `training/loss_v2.csv`, `results/student_v2_score.json` |
 | 26 | Initialised the git repository (branch `main`) and made the first commit: 53 files, about 1 MB. Model files, `out/` and virtual environments are excluded by `.gitignore`. A scan for key-like strings found none. Chosen visibility: public. | `.gitignore` |
 
+## Task 3: inference service
+
+| Step | What | Where |
+|---|---|---|
+| 27 | Wrote the FastAPI service: `POST /parse`, `GET /healthz`, `GET /readyz` (503 until loaded). Config from `MODEL_URI`, `MODEL_VERSION`, `S3_ENDPOINT`, `MAX_NEW_TOKENS` (+ `FAULT_INJECT`); credentials from the environment (a Secret in the cluster). Output is checked against `schema.json`; invalid output gives HTTP 500 `{"error": "invalid_model_output"}`. The model is downloaded in a background thread at start-up and checked against `files.sha256`; a failed load exits the process so Kubernetes restarts the pod. Torch threads follow the container's CPU quota. | `service/app.py` |
+| 28 | Built the image: `python:3.12.16-slim`, CPU-only torch, all 50 dependencies pinned (resolved inside a container and frozen), runs as a non-root user, no weights. Size 1.31 GB (limit 2 GB). | `service/Dockerfile`, `service/requirements.txt`, `.dockerignore` |
+| 29 | **Problem:** the first limits test failed: port 8000 on the host is used by another program (answers HTTP 401). The test scripts now use ports 18000 and 18001. | `scripts/check_service_limits.sh` |
+| 30 | Changed response bodies to Python's default `json.dumps` format (`"error": "invalid_model_output"` with a space), to match how the handout writes them. | `service/app.py` |
+| 31 | Limits test at 1 CPU and 1 GiB without swap: model download 285 MB, ready 5 s after start; 50 sequential requests gave 49 x HTTP 200 and 1 x HTTP 500 (the validation caught one invalid model output); p50 351 ms, p95 498 ms; peak memory (cgroup `memory.peak`) 811,036,672 bytes (773 MiB, including page cache from the downloaded files; `docker stats` showed 350 MiB in use afterwards); not OOM-killed. | `results/service_limits.txt` |
+| 32 | API check: `/healthz` 200, `/readyz` 503 then 200, headers `X-Model-Version` and `X-Served-By` present, empty text gives 422, `FAULT_INJECT=1` gives HTTP 500 with the exact error body. | `results/service_api.txt` |
+
 Decisions in `clean.py`: records are counted under the first rule they break, in the order (a) to (d); duplicates (exact same command text) are removed afterwards, only among records that passed (a) to (d), keeping the smallest id. Slot values are compared with the command as an exact (case-sensitive) substring. Local-file mode (no `S3_ENDPOINT`) is untested.
 
 ## Open items
 
 - Task 1 report: counts table and a half-page on sharding.
-- Task 2: finish v2 (training, upload), GitHub Release asset (the project is not a git repository yet), report text (loss table, three-model comparison, half-page distillation explanation).
+- Task 3 left: use the image in the cluster (Task 4); unit tests (Task 6).
+- Task 2: GitHub Release asset (the project is not a git repository yet), report text (loss table, three-model comparison, half-page distillation explanation).
 - Test `make up` from a fresh clone (needed for Task 6).
 - Final README.md must list build, deploy, test and teardown commands (the current README.md is the original student kit file).
 

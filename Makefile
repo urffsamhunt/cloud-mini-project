@@ -6,7 +6,7 @@ CLUSTER ?= cloud
 CONFIG ?= training/config.yaml
 PY_TRAIN := .venv-train/bin/python
 .NOTPARALLEL:
-.PHONY: help check cluster namespaces secrets seaweedfs buckets worker-image up label dataset train-env train train-v2 eval publish-model status down
+.PHONY: help check cluster namespaces secrets seaweedfs buckets worker-image up label dataset train-env train train-v2 eval publish-model service-image service-check service-limits status down
 
 help: ## list targets
 > @grep -E '^[a-z0-9-]+:.*## ' Makefile | awk -F':.*## ' '{printf "  make %-13s %s\n", $$1, $$2}'
@@ -64,6 +64,15 @@ eval: train-env ## score a model on the validation set: make eval MODEL=out/mode
 
 publish-model: ## upload a trained model to the models bucket and verify: make publish-model VERSION=v1
 > ./scripts/with_s3.sh $(PY_TRAIN) -I training/upload_model.py out/models/$(VERSION) $(VERSION)
+
+service-image: ## build the inference service image (no model weights inside)
+> docker build -q -t parser-service:1 -f service/Dockerfile .
+
+service-check: ## test the API contract and FAULT_INJECT on the image (needs the models bucket)
+> ./scripts/with_s3.sh scripts/check_service_api.sh
+
+service-limits: ## run the image at 1 CPU / 1 GiB, send 50 requests, report peak memory
+> ./scripts/with_s3.sh scripts/check_service_limits.sh
 
 status: ## show pods and jobs
 > kubectl get pods -A

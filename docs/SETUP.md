@@ -81,7 +81,19 @@ python3 scripts/teacher_predict.py && python3 tools/score.py results/teacher_pre
 `cp out/v1/train.* data/v1/`); the script refuses to run if it does not match `data/v1/train.sha256`.
 `model.sha256` holds the SHA-256 of the archive `model-<version>.tar`; that archive is also the GitHub Release asset.
 
-## 6. Tear down
+## 6. Inference service image (Task 3)
+
+```bash
+make service-image      # docker build of service/Dockerfile; every dependency is pinned in service/requirements.txt
+make service-check      # API contract + FAULT_INJECT=1 -> results/service_api.txt
+make service-limits     # 1 CPU / 1 GiB, 50 requests, peak memory -> results/service_limits.txt
+```
+
+The image contains no model weights. At start-up the service downloads `MODEL_URI` (for example `s3://models/v1`)
+from `S3_ENDPOINT`, verifies `files.sha256`, loads the model and only then answers `/readyz` with 200.
+The two check scripts run the container with host networking, so they use ports 18000 and 18001 on the host.
+
+## 7. Tear down
 
 ```bash
 make down

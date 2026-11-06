@@ -1,0 +1,8 @@
+.git
+.venv
+.venv-train
+out
+results
+playground
+docs
+data/v1

@@ -1,0 +1,13 @@
+# 2026-11-06T13:36:26Z  image=parser-service:1  model=s3://models/v1  limits: cpus=1 memory=1GiB (no swap)
+image size: 1309365687 bytes
+healthz: 200
+readyz while loading: 503
+readyz after load: 200 (took about 5 s after the check above)
+2026-11-06 13:36:30,372 INFO downloaded 7 files (285.3 MB) from s3://models/v1
+2026-11-06 13:36:30,637 INFO checksums verified
+2026-11-06 13:36:32,169 INFO model v1 ready after 5.1 s (threads=1)
+first reply: {"intent": "calendar_remove", "date": "upcoming", "time": null, "place": null} | X-Model-Version: v1 | X-Served-By: fedora
+requests: 50  status codes: {200: 49, 500: 1}  p50 351 ms  p95 498 ms  max 666 ms
+peak memory (cgroup memory.peak): 811036672 bytes
+docker stats: 349.5MiB / 1GiB  cpu 0.16%
+OOMKilled: false  restarts: 0
