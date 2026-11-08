@@ -57,6 +57,11 @@ Decisions in `clean.py`: records are counted under the first rule they break, in
 34. `scripts/task4_evidence.sh` (Make target `app-evidence`). First run showed 3 x HTTP 502 and 1 x 000 during the rolling update: Traefik kept sending requests to a pod that had started terminating. Fix: `preStop: sleep 8` and `terminationGracePeriodSeconds: 30`. Rerun: rolling update v1 -> v2 -> rollback, 500 requests, all 200 (456 served by v1, 44 by v2); pod deletion, 150 requests all 200, two ready pods again after 9.5 s; 200 requests split 100/100 between the two pods; cold start (scale 0 -> 1 until Ready) 7.2 s, 7.1 s, 22.1 s, median 7.2 s. Ran; evidence in `results/task4_*.txt`. The load-balancing test itself showed 1 x 502 and 1 x 000 when run right after a manifest rollout, while the old pod was still draining; the script now waits for a settled state first, and the stored load-balancing result is a rerun on a settled deployment (the other three files come from the full run).
 35. Makefile targets `deploy-app`, `app-evidence` added (not run through `make`; the commands were run directly).
 36. Task 5: `network/subnets.md` (table, working, NACL tables, half-page explanation), `network/nacl.json`, `network/packets_extra.jsonl` (23 own test packets). `tools/nacl_sim.py --check`: sample 6/6, extra 23/23. Two of my first expectations were wrong (outbound 8000 to non-app addresses and 8001 to the app subnet are allowed by the reply rule 1024-65535); documented as a known limitation in `subnets.md`. Ran. No cluster involvement.
+37. Task 6 tests and lint: `tests/` (13 pytest tests: cleaning rules, service validation and probes, prompt format, `score.py` gate, NACL), `ruff.toml` (E, F, W, I; E501 and E741 ignored; `tools/` excluded because it is the instructor's kit), `requirements-dev.txt`, `pytest.ini`. Ran in a scratch venv: `ruff check .` clean, 13 passed. Ruff changed the import order in `service/app.py` and split two semicolon lines in `training/train.py`; behaviour is unchanged, but the service image was built before this and has not been rebuilt.
+38. `.github/workflows/ci.yml`: secret-scan (gitleaks action) next to lint; then unit-tests, evaluate (downloads the model from the GitHub Release, checks it against `release/model-<v>.sha256`, runs `training/predict.py` and `tools/score.py`), quality-gate (`score.py --min-validity 95`). Manual run with `model_source = untrained` evaluates the untrained Pythia so the gate fails. NOT RUN: only YAML syntax checked; needs the GitHub Release and a push.
+39. gitleaks run locally with the Docker image over the 5 existing commits: no leaks.
+40. `scripts/fetch_models.py` + Makefile `models`, `lint`, `test`; `make up` now = check, cluster, namespaces, secrets, seaweedfs, buckets, models, worker-image, deploy-app. NOT RUN: `make up` from a fresh clone needs the Release to exist (published models are fetched from it), and the test deletes the current cluster. Only `make -n up` was checked.
+41. `AI_USE.md` written (draft; the student has to add their own corrections at the end).
 
 ## Open items
 
@@ -64,7 +69,7 @@ Decisions in `clean.py`: records are counted under the first rule they break, in
 - Task 4 left: HPA scale-up under load (do it with the Task 7 Locust run), single-node limitation statement in the report, `kubectl top pods` under load.
 - Task 3 left: unit tests (Task 6).
 - Task 2: GitHub Release asset (repo is pushed to GitHub; `gh release create` was blocked by the permission classifier because it makes public files, so the user has to run it or allow it), report text (loss table, three-model comparison, half-page distillation explanation).
-- Test `make up` from a fresh clone (needed for Task 6).
+- Task 6: publish the Releases, push, run the workflow twice (release model: passes; untrained: fails at the gate) and keep the links; test `make down` then `make up` from a fresh clone (two commands after the clone).
 - Final README.md must list build, deploy, test and teardown commands (the current README.md is the original student kit file).
 
 ## Known limitations

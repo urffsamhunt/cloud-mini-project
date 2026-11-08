@@ -103,7 +103,18 @@ make app-evidence    # ~5 min: writes results/task4_*.txt
 
 Models must already be in the `models` bucket (`make train`, which uploads, or `make publish-model`). The Deployment starts on `MODEL_URI=s3://models/v1/`; the rolling update test switches it to v2 and rolls back. Pods drain for 8 s (`preStop`) so the Ingress stops routing to them before they stop.
 
-## 8. Tear down
+## 8. Tests, lint and CI (Task 6)
+
+```bash
+pip install -r requirements-dev.txt
+make lint && make test
+```
+
+CI is `.github/workflows/ci.yml`. It needs the GitHub Releases `model-v1` and `model-v2` (each holds `model-<v>.tar`; its SHA-256 must equal `release/model-<v>.sha256`). Run the failing case from the Actions tab: Run workflow with `model_source = untrained`.
+
+From a fresh clone: `git clone <repo> && cd <repo> && make up`. `make up` fetches the models from the Releases when `out/models/` does not hold them.
+
+## 9. Tear down
 
 ```bash
 make down
