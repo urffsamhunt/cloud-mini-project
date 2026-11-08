@@ -1,0 +1,112 @@
+name: ci
+
+# Stages, in order: lint -> unit tests -> model evaluation -> quality gate.
+# The secret scan runs next to lint and must report nothing.
+# Manual run with model_source = untrained uses the untrained Pythia-70M, so the quality gate must fail.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      model_source:
+        description: "Which model to evaluate"
+        type: choice
+        options: [release, untrained]
+        default: release
+      release_tag:
+        description: "GitHub Release that holds the model (used when model_source = release)"
+        default: model-v1
+
+permissions:
+  contents: read
+
+env:
+  MODEL_SOURCE: ${{ inputs.model_source || 'release' }}
+  RELEASE_TAG: ${{ inputs.release_tag || 'model-v1' }}
+
+jobs:
+  secret-scan:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - run: pip install -r requirements-dev.txt
+      - run: ruff check .
+
+  unit-tests:
+    needs: lint
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - run: pip install -r requirements-dev.txt
+      - run: python -m pytest -v
+
+  evaluate:
+    needs: unit-tests
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: training/requirements.txt
+      - run: pip install -r training/requirements.txt
+
+      - name: Get the model
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$MODEL_SOURCE" = "untrained" ]; then
+            echo "MODEL=EleutherAI/pythia-70m" >> "$GITHUB_ENV"
+          else
+            mkdir -p model_dl model
+            gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --dir model_dl --pattern 'model-*.tar'
+            ls -l model_dl
+            ( cd model_dl && sha256sum -c ../release/"${RELEASE_TAG}".sha256 )   # checksum committed in the repo
+            tar -xf model_dl/model-*.tar -C model
+            echo "MODEL=model" >> "$GITHUB_ENV"
+          fi
+
+      - name: Predict on validation.jsonl
+        run: python training/predict.py --model "$MODEL" --data data/validation.jsonl --out results/ci_predictions.jsonl
+
+      - name: Score (report only; the gate is the next stage)
+        run: python tools/score.py results/ci_predictions.jsonl data/validation.jsonl --out results/ci_score.json | tee results/ci_score.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: evaluation
+          path: results/ci_*
+
+  quality-gate:
+    needs: evaluate
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: evaluation
+          path: results
+      - name: Gate, JSON validity must be at least 95%
+        run: python tools/score.py results/ci_predictions.jsonl data/validation.jsonl --min-validity 95

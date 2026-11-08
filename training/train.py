@@ -109,7 +109,9 @@ def main():
             print(f"warning: {lib} is {have}, config says {want}", file=sys.stderr)
 
     seed = cfg["seed"]
-    random.seed(seed); np.random.seed(seed); torch.manual_seed(seed)
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
     torch.use_deterministic_algorithms(True, warn_only=True)
     device = torch.device(cfg["device"])
 
@@ -143,7 +145,9 @@ def main():
             out = model(input_ids=ids.to(device), attention_mask=att.to(device), labels=lab.to(device))
             out.loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-            opt.step(); sched.step(); opt.zero_grad(set_to_none=True)
+            opt.step()
+            sched.step()
+            opt.zero_grad(set_to_none=True)
             n = int((lab[:, 1:] != -100).sum())
             loss_sum += out.loss.item() * n
             tok_sum += n

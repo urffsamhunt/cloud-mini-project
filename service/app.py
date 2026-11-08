@@ -19,12 +19,11 @@ import threading
 import time
 from pathlib import Path
 
+from common import prompt_for
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse, Response
 from jsonschema import Draft202012Validator
 from pydantic import BaseModel, Field
-
-from common import prompt_for
 
 log = logging.getLogger("service")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")

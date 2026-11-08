@@ -4,7 +4,11 @@ Usage: python3 scripts/test_teacher.py [N] [--host URL]
 Runs each sampled command twice (temperature 0, seed 42) to check determinism,
 and reports how many replies are valid JSON with the four required keys.
 """
-import argparse, json, random, time, urllib.request
+import argparse
+import json
+import random
+import time
+import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent

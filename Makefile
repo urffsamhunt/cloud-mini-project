@@ -6,7 +6,7 @@ CLUSTER ?= cloud
 CONFIG ?= training/config.yaml
 PY_TRAIN := .venv-train/bin/python
 .NOTPARALLEL:
-.PHONY: help check cluster namespaces secrets seaweedfs buckets worker-image up label dataset train-env train train-v2 eval publish-model service-image service-check service-limits deploy-app app-evidence status down
+.PHONY: help check cluster namespaces secrets seaweedfs buckets worker-image up label dataset train-env train train-v2 eval publish-model models test lint service-image service-check service-limits deploy-app app-evidence status down
 
 help: ## list targets
 > @grep -E '^[a-z0-9-]+:.*## ' Makefile | awk -F':.*## ' '{printf "  make %-13s %s\n", $$1, $$2}'
@@ -38,7 +38,7 @@ worker-image: ## build the teacher worker image and import it into the cluster
 > docker build -q -t teacher-worker:1 -f worker/Dockerfile .
 > k3d image import teacher-worker:1 -c $(CLUSTER)
 
-up: check cluster namespaces secrets seaweedfs buckets worker-image ## everything except the teacher run
+up: check cluster namespaces secrets seaweedfs buckets models worker-image deploy-app ## build and deploy everything (not the teacher run or training)
 
 label: ## run the 2 teacher workers and wait (restarts the job from scratch)
 > kubectl -n pipeline delete job teacher-labelling --ignore-not-found
@@ -64,6 +64,16 @@ eval: train-env ## score a model on the validation set: make eval MODEL=out/mode
 
 publish-model: ## upload a trained model to the models bucket and verify: make publish-model VERSION=v1
 > ./scripts/with_s3.sh $(PY_TRAIN) -I training/upload_model.py out/models/$(VERSION) $(VERSION)
+
+models: ## put models v1 and v2 into the models bucket (local archive, else GitHub Release)
+> python3 scripts/fetch_models.py v1 v2
+> for v in v1 v2; do ./scripts/with_s3.sh .venv/bin/python -I training/upload_model.py out/models/$$v $$v || exit 1; done
+
+lint: ## ruff
+> ruff check .
+
+test: ## unit tests (needs: pip install -r requirements-dev.txt)
+> python3 -m pytest -q
 
 service-image: ## build the inference service image (no model weights inside)
 > docker build -q -t parser-service:1 -f service/Dockerfile .

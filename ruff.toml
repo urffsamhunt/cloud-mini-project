@@ -1,0 +1,8 @@
+line-length = 120
+# tools/ is the instructor's kit, playground/ is a personal test page, out/ is generated
+extend-exclude = ["tools", "playground", "out", ".venv", ".venv-train"]
+
+[lint]
+select = ["E", "F", "W", "I"]
+# E501: a few long lines in data-writing code; E741: `l` as a line variable in comprehensions
+ignore = ["E501", "E741"]
