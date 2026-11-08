@@ -63,6 +63,7 @@ Decisions in `clean.py`: records are counted under the first rule they break, in
 40. `scripts/fetch_models.py` + Makefile `models`, `lint`, `test`; `make up` now = check, cluster, namespaces, secrets, seaweedfs, buckets, models, worker-image, deploy-app. NOT RUN: `make up` from a fresh clone needs the Release to exist (published models are fetched from it), and the test deletes the current cluster. Only `make -n up` was checked.
 41. `AI_USE.md` written (draft; the student has to add their own corrections at the end).
 42. Published Releases `model-v1` and `model-v2` (by the user; asset digests on GitHub equal `release/model-<v>.sha256`). Pushed to GitHub (git's configured `credential-secret` helper does not exist on this machine, so the push used `-c credential.helper='!gh auth git-credential'`). CI run 1 (release model-v1): all five jobs green, gitleaks reported nothing, CI scores equal the local ones (99/85/49). CI run 2 (`model_source=untrained`): only the quality gate failed. Links in `results/ci_runs.md`. Ran on GitHub.
+43. Raw teacher shards exported from SeaweedFS to `data/teacher/` (520 KB, committed) before deleting the cluster. `worker/clean.py --shards data/teacher` (local-file mode, previously untested) reproduces the same counts and SHA-256 `dfcdc41d...`. Ran.
 
 ## Open items
 
