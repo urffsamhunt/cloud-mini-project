@@ -5,7 +5,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 IMAGE=${IMAGE:-parser-service:1}
-MODEL_URI=${MODEL_URI:-s3://models/v1}
+MODEL_URI=${MODEL_URI:-s3://models/v2}
 NAME=parser-limits-test
 PORT=${PORT:-18000}   # host networking is used, so pick a port that is free on the host
 OUT=results/service_limits.txt
@@ -14,7 +14,7 @@ docker rm -f "$NAME" >/dev/null 2>&1 || true
 trap 'docker rm -f "$NAME" >/dev/null 2>&1 || true' EXIT
 
 docker run -d --name "$NAME" --cpus=1 --memory=1g --memory-swap=1g --network host \
-  -e MODEL_URI="$MODEL_URI" -e MODEL_VERSION="${MODEL_VERSION:-v1}" -e S3_ENDPOINT -e MAX_NEW_TOKENS=80 \
+  -e MODEL_URI="$MODEL_URI" -e MODEL_VERSION="${MODEL_VERSION:-v2}" -e S3_ENDPOINT -e MAX_NEW_TOKENS=80 \
   -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_DEFAULT_REGION "$IMAGE" uvicorn app:app --host 0.0.0.0 --port "$PORT" >/dev/null
 
 {

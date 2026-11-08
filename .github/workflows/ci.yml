@@ -16,14 +16,14 @@ on:
         default: release
       release_tag:
         description: "GitHub Release that holds the model (used when model_source = release)"
-        default: model-v1
+        default: model-v2
 
 permissions:
   contents: read
 
 env:
   MODEL_SOURCE: ${{ inputs.model_source || 'release' }}
-  RELEASE_TAG: ${{ inputs.release_tag || 'model-v1' }}
+  RELEASE_TAG: ${{ inputs.release_tag || 'model-v2' }}
 
 jobs:
   secret-scan:

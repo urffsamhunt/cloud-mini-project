@@ -1,5 +1,5 @@
-== pod deletion: delete one pod while sending 1 request every 0.2 s ==
-deleting parser-565b6d765c-nsfjn at t0
-back to 2 ready replicas after 9.5 s
-status codes during the test:
-    150 200
+== pod deletion under load (Locust, 4 users, 90 s; one pod deleted at 20 s) ==
+deleting parser-5779d997d9-mks97; ready replicas before: 2
+two ready replicas again after 10.4 s (deployment readyReplicas=2)
+requests 334, failures 0 (0.00 %), p50 1100 ms, p95 1900 ms, 3.76 req/s
+served by header: {'per_replica': {'parser-5779d997d9-mks97': 43, 'parser-5779d997d9-v8945': 180, 'parser-5779d997d9-kg2lv': 113}, 'per_model_version': {'v2': 336}}

@@ -1,0 +1,66 @@
+== HPA: start with 1 replica, 4 users for 4 minutes, then idle ==
+21:37:03 hpa: cpu=% current= desired=0 ready=1 parser-5779d997d9-62f24=3m parser-5779d997d9-wjctw=3m 
+21:37:03 hpa: cpu=% current= desired=0 ready=1 parser-5779d997d9-62f24=3m parser-5779d997d9-wjctw=3m 
+21:37:13 hpa: cpu=% current= desired=0 ready=1 parser-5779d997d9-62f24=3m 
+21:37:23 hpa: cpu=125% current=1 desired=2 ready=1 parser-5779d997d9-62f24=627m 
+21:37:34 hpa: cpu=197% current=2 desired=2 ready=2 parser-5779d997d9-62f24=986m parser-5779d997d9-qlf4f=822m 
+21:37:44 hpa: cpu=197% current=2 desired=2 ready=2 parser-5779d997d9-62f24=986m parser-5779d997d9-qlf4f=822m 
+21:37:54 hpa: cpu=196% current=2 desired=2 ready=2 parser-5779d997d9-62f24=983m parser-5779d997d9-qlf4f=984m 
+21:38:04 hpa: cpu=196% current=2 desired=2 ready=2 parser-5779d997d9-62f24=986m parser-5779d997d9-qlf4f=981m 
+21:38:15 hpa: cpu=196% current=2 desired=2 ready=2 parser-5779d997d9-62f24=986m parser-5779d997d9-qlf4f=981m 
+21:38:25 hpa: cpu=195% current=2 desired=2 ready=2 parser-5779d997d9-62f24=983m parser-5779d997d9-qlf4f=976m 
+21:38:35 hpa: cpu=196% current=2 desired=2 ready=2 parser-5779d997d9-62f24=988m parser-5779d997d9-qlf4f=972m 
+21:38:45 hpa: cpu=196% current=2 desired=2 ready=2 parser-5779d997d9-62f24=988m parser-5779d997d9-qlf4f=972m 
+21:38:56 hpa: cpu=197% current=2 desired=2 ready=2 parser-5779d997d9-62f24=988m parser-5779d997d9-qlf4f=986m 
+21:39:06 hpa: cpu=197% current=2 desired=2 ready=2 parser-5779d997d9-62f24=989m parser-5779d997d9-qlf4f=987m 
+21:39:16 hpa: cpu=197% current=2 desired=2 ready=2 parser-5779d997d9-62f24=989m parser-5779d997d9-qlf4f=983m 
+21:39:26 hpa: cpu=197% current=2 desired=2 ready=2 parser-5779d997d9-62f24=989m parser-5779d997d9-qlf4f=983m 
+21:39:37 hpa: cpu=197% current=2 desired=2 ready=2 parser-5779d997d9-62f24=987m parser-5779d997d9-qlf4f=983m 
+21:39:47 hpa: cpu=196% current=2 desired=2 ready=2 parser-5779d997d9-62f24=985m parser-5779d997d9-qlf4f=983m 
+21:39:57 hpa: cpu=196% current=2 desired=2 ready=2 parser-5779d997d9-62f24=985m parser-5779d997d9-qlf4f=983m 
+21:40:07 hpa: cpu=196% current=2 desired=2 ready=2 parser-5779d997d9-62f24=983m parser-5779d997d9-qlf4f=981m 
+21:40:18 hpa: cpu=196% current=2 desired=2 ready=2 parser-5779d997d9-62f24=987m parser-5779d997d9-qlf4f=977m 
+21:40:28 hpa: cpu=196% current=2 desired=2 ready=2 parser-5779d997d9-62f24=987m parser-5779d997d9-qlf4f=977m 
+21:40:38 hpa: cpu=196% current=2 desired=2 ready=2 parser-5779d997d9-62f24=983m parser-5779d997d9-qlf4f=981m 
+21:40:49 hpa: cpu=196% current=2 desired=2 ready=2 parser-5779d997d9-62f24=983m parser-5779d997d9-qlf4f=978m 
+21:40:59 hpa: cpu=196% current=2 desired=2 ready=2 parser-5779d997d9-62f24=983m parser-5779d997d9-qlf4f=978m 
+--- load stopped; waiting for the scale-down ---
+21:41:09 hpa: cpu=196% current=2 desired=2 ready=2 parser-5779d997d9-62f24=984m parser-5779d997d9-qlf4f=981m 
+21:41:19 hpa: cpu=182% current=2 desired=2 ready=2 parser-5779d997d9-62f24=900m parser-5779d997d9-qlf4f=925m 
+21:41:30 hpa: cpu=182% current=2 desired=2 ready=2 parser-5779d997d9-62f24=900m parser-5779d997d9-qlf4f=925m 
+21:41:40 hpa: cpu=0% current=2 desired=2 ready=2 parser-5779d997d9-62f24=4m parser-5779d997d9-qlf4f=4m 
+21:41:50 hpa: cpu=0% current=2 desired=2 ready=2 parser-5779d997d9-62f24=4m parser-5779d997d9-qlf4f=4m 
+21:42:00 hpa: cpu=0% current=2 desired=2 ready=2 parser-5779d997d9-62f24=4m parser-5779d997d9-qlf4f=4m 
+21:42:11 hpa: cpu=0% current=2 desired=2 ready=2 parser-5779d997d9-62f24=4m parser-5779d997d9-qlf4f=4m 
+21:42:21 hpa: cpu=0% current=2 desired=2 ready=2 parser-5779d997d9-62f24=4m parser-5779d997d9-qlf4f=3m 
+21:42:31 hpa: cpu=0% current=2 desired=2 ready=2 parser-5779d997d9-62f24=4m parser-5779d997d9-qlf4f=3m 
+21:42:42 hpa: cpu=0% current=2 desired=2 ready=2 parser-5779d997d9-62f24=4m parser-5779d997d9-qlf4f=3m 
+21:42:52 hpa: cpu=0% current=2 desired=2 ready=2 parser-5779d997d9-62f24=3m parser-5779d997d9-qlf4f=4m 
+21:43:02 hpa: cpu=0% current=2 desired=2 ready=2 parser-5779d997d9-62f24=3m parser-5779d997d9-qlf4f=4m 
+21:43:12 hpa: cpu=0% current=2 desired=2 ready=2 parser-5779d997d9-62f24=3m parser-5779d997d9-qlf4f=4m 
+21:43:23 hpa: cpu=0% current=2 desired=2 ready=2 parser-5779d997d9-62f24=3m parser-5779d997d9-qlf4f=4m 
+21:43:33 hpa: cpu=0% current=2 desired=2 ready=2 parser-5779d997d9-62f24=3m parser-5779d997d9-qlf4f=4m 
+21:43:43 hpa: cpu=0% current=2 desired=2 ready=2 parser-5779d997d9-62f24=3m parser-5779d997d9-qlf4f=4m 
+21:43:53 hpa: cpu=0% current=2 desired=2 ready=2 parser-5779d997d9-62f24=3m parser-5779d997d9-qlf4f=3m 
+21:44:04 hpa: cpu=0% current=2 desired=2 ready=2 parser-5779d997d9-62f24=3m parser-5779d997d9-qlf4f=3m 
+21:44:14 hpa: cpu=0% current=2 desired=2 ready=2 parser-5779d997d9-62f24=3m parser-5779d997d9-qlf4f=3m 
+21:44:24 hpa: cpu=0% current=2 desired=2 ready=2 parser-5779d997d9-62f24=3m parser-5779d997d9-qlf4f=3m 
+21:44:35 hpa: cpu=0% current=2 desired=2 ready=2 parser-5779d997d9-62f24=3m parser-5779d997d9-qlf4f=3m 
+21:44:45 hpa: cpu=0% current=2 desired=2 ready=2 parser-5779d997d9-62f24=3m parser-5779d997d9-qlf4f=3m 
+21:44:55 hpa: cpu=0% current=2 desired=2 ready=2 parser-5779d997d9-62f24=3m parser-5779d997d9-qlf4f=3m 
+21:45:05 hpa: cpu=0% current=2 desired=2 ready=2 parser-5779d997d9-62f24=3m parser-5779d997d9-qlf4f=3m 
+21:45:16 hpa: cpu=0% current=2 desired=2 ready=2 parser-5779d997d9-62f24=3m parser-5779d997d9-qlf4f=3m 
+21:45:26 hpa: cpu=0% current=2 desired=2 ready=2 parser-5779d997d9-62f24=3m parser-5779d997d9-qlf4f=3m 
+21:45:36 hpa: cpu=0% current=2 desired=2 ready=2 parser-5779d997d9-62f24=3m parser-5779d997d9-qlf4f=3m 
+21:45:47 hpa: cpu=0% current=2 desired=2 ready=2 parser-5779d997d9-62f24=3m parser-5779d997d9-qlf4f=3m 
+21:45:57 hpa: cpu=0% current=2 desired=2 ready=2 parser-5779d997d9-62f24=3m parser-5779d997d9-qlf4f=3m 
+21:46:07 hpa: cpu=0% current=2 desired=2 ready=2 parser-5779d997d9-62f24=3m parser-5779d997d9-qlf4f=3m 
+21:46:17 hpa: cpu=0% current=2 desired=1 ready=1 parser-5779d997d9-62f24=3m parser-5779d997d9-qlf4f=3m 
+21:46:28 hpa: cpu=0% current=2 desired=1 ready=1 parser-5779d997d9-62f24=3m parser-5779d997d9-qlf4f=3m 
+21:46:38 hpa: cpu=0% current=1 desired=1 ready=1 parser-5779d997d9-62f24=3m 
+back to 1 replica
+Events:
+  Type    Reason             Age    From                       Message
+  ----    ------             ----   ----                       -------
+  Normal  SuccessfulRescale  9m22s  horizontal-pod-autoscaler  New size: 2; reason: cpu resource utilization (percentage of request) above target
+  Normal  SuccessfulRescale  22s    horizontal-pod-autoscaler  New size: 1; reason: All metrics below target

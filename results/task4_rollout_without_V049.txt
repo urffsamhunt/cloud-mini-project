@@ -1,0 +1,16 @@
+== rolling update v1 -> v2, then rollout undo, under Locust load (4 users, 4 min) ==
+start state: X-Model-Version: v1
+21:32:55 set MODEL_VERSION=v2 MODEL_URI=s3://models/v2/
+21:33:09 rollout to v2 complete; serving: X-Model-Version: v2
+deployment.apps/parser 
+REVISION  CHANGE-CAUSE
+9         baseline: model v1
+10        model v1 -> v2
+
+21:33:40 kubectl rollout undo
+deployment.apps/parser rolled back
+21:34:19 rollback complete; after rollback: X-Model-Version: v1
+requests 707, failures 0 (0.00 %), p50 910 ms, p95 3700 ms, 2.96 req/s
+served by header: {'per_replica': {'parser-565b6d765c-5tkvr': 96, 'parser-565b6d765c-wb7lb': 112, 'parser-5779d997d9-b4nn4': 94, 'parser-5779d997d9-kxdm6': 71, 'parser-565b6d765c-2fzcc': 172, 'parser-565b6d765c-m6grv': 162}, 'per_model_version': {'v1': 542, 'v2': 165}}
+--- promote v2 again (the manifest default) ---
+final: X-Model-Version: v2

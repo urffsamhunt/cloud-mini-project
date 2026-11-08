@@ -1,0 +1,15 @@
+== Service endpoints while the model is loading (scale to 0, then to 1; poll every second) ==
+t= 0.2s  pod:                                   endpoints: ready= notReady=                          GET /readyz via Ingress: 503
+t= 1.4s  pod: parser-5779d997d9-mks97 0/1 ContainerCreating  endpoints: ready= notReady=                          GET /readyz via Ingress: 503
+t= 2.5s  pod: parser-5779d997d9-mks97 0/1 Running  endpoints: ready= notReady=10.42.0.21                GET /readyz via Ingress: 503
+t= 3.6s  pod: parser-5779d997d9-mks97 0/1 Running  endpoints: ready= notReady=10.42.0.21                GET /readyz via Ingress: 503
+t= 5.2s  pod: parser-5779d997d9-mks97 0/1 Running  endpoints: ready= notReady=10.42.0.21                GET /readyz via Ingress: 503
+t= 6.3s  pod: parser-5779d997d9-mks97 0/1 Running  endpoints: ready= notReady=10.42.0.21                GET /readyz via Ingress: 503
+t= 7.4s  pod: parser-5779d997d9-mks97 0/1 Running  endpoints: ready= notReady=10.42.0.21                GET /readyz via Ingress: 503
+t= 8.5s  pod: parser-5779d997d9-mks97 1/1 Running  endpoints: ready=10.42.0.21 notReady=                GET /readyz via Ingress: 200
+t= 9.6s  pod: parser-5779d997d9-mks97 1/1 Running  endpoints: ready=10.42.0.21 notReady=                GET /readyz via Ingress: 200
+t=10.7s  pod: parser-5779d997d9-mks97 1/1 Running  endpoints: ready=10.42.0.21 notReady=                GET /readyz via Ingress: 200
+t=11.8s  pod: parser-5779d997d9-mks97 1/1 Running  endpoints: ready=10.42.0.21 notReady=                GET /readyz via Ingress: 200
+t=13.2s  pod: parser-5779d997d9-mks97 1/1 Running  endpoints: ready=10.42.0.21 notReady=                GET /readyz via Ingress: 200
+t=14.4s  pod: parser-5779d997d9-mks97 1/1 Running  endpoints: ready=10.42.0.21 notReady=                GET /readyz via Ingress: 200
+t=15.5s  pod: parser-5779d997d9-mks97 1/1 Running  endpoints: ready=10.42.0.21 notReady=                GET /readyz via Ingress: 200

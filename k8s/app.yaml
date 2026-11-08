@@ -33,9 +33,9 @@ spec:
               exec: {command: ["sleep", "8"]}
           env:
             - name: MODEL_VERSION
-              value: v1
+              value: v2
             - name: MODEL_URI
-              value: s3://models/v1/
+              value: s3://models/v2/
             - name: S3_ENDPOINT
               value: http://seaweedfs.data.svc.cluster.local:8333
           envFrom:

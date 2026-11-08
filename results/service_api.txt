@@ -1,15 +1,15 @@
-# 2026-11-06T13:37:03Z  image=parser-service:1
+# 2026-11-08T17:09:24Z  image=parser-service:1
 == FAULT_INJECT=0
 -- GET /healthz: {"status":"ok"} [HTTP 200]
 -- GET /readyz:  {"status":"ready"} [HTTP 200]
 -- POST /parse {"text": "set an alarm for seven thirty am tomorrow"}
 HTTP/1.1 200 OK
-x-model-version: v1
+x-model-version: v2
 x-served-by: fedora
 {"intent": "alarm_set", "date": "tomorrow", "time": "seven thirty am", "place": null}
 -- POST /parse {"text": "what is the weather in london"}
 HTTP/1.1 200 OK
-x-model-version: v1
+x-model-version: v2
 x-served-by: fedora
 {"intent": "weather_query", "date": null, "time": null, "place": "london"}
 -- POST /parse with an empty text (expect HTTP 422)
@@ -19,6 +19,6 @@ HTTP/1.1 422 Unprocessable Entity
 -- GET /healthz: {"status":"ok"} [HTTP 200]
 -- POST /parse (the model output is replaced by the text: not json)
 HTTP/1.1 500 Internal Server Error
-x-model-version: v1
+x-model-version: v2
 x-served-by: fedora
 {"error": "invalid_model_output"}

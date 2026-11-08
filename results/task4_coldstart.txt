@@ -1,5 +1,11 @@
-== cold start: pod scheduled -> Ready, 3 runs (HPA paused by scaling the Deployment directly) ==
-run 1: 7.2 s
-run 2: 7.1 s
-run 3: 22.1 s
-median: 7.2 s
+== cold start: delete all pods, 3 runs; creation -> Ready from the API (per run: the slower of the 2 pods) ==
+run 1 pod parser-5779d997d9-c7477: Ready 7.0 s after creation (1 s resolution)
+run 1 pod parser-5779d997d9-sxb8f: Ready 7.0 s after creation (1 s resolution)
+run 1: 7.0 s
+run 2 pod parser-5779d997d9-g942m: Ready 7.0 s after creation (1 s resolution)
+run 2 pod parser-5779d997d9-wsn7w: Ready 7.0 s after creation (1 s resolution)
+run 2: 7.0 s
+run 3 pod parser-5779d997d9-7vs85: Ready 6.0 s after creation (1 s resolution)
+run 3 pod parser-5779d997d9-ctcmw: Ready 6.0 s after creation (1 s resolution)
+run 3: 6.0 s
+runs: [7.0, 7.0, 6.0] median: 7.0 s
