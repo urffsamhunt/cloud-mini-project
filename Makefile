@@ -6,7 +6,7 @@ CLUSTER ?= cloud
 CONFIG ?= training/config.yaml
 PY_TRAIN := .venv-train/bin/python
 .NOTPARALLEL:
-.PHONY: help check cluster namespaces secrets seaweedfs buckets worker-image up label dataset train-env train train-v2 eval publish-model service-image service-check service-limits status down
+.PHONY: help check cluster namespaces secrets seaweedfs buckets worker-image up label dataset train-env train train-v2 eval publish-model service-image service-check service-limits deploy-app app-evidence status down
 
 help: ## list targets
 > @grep -E '^[a-z0-9-]+:.*## ' Makefile | awk -F':.*## ' '{printf "  make %-13s %s\n", $$1, $$2}'
@@ -73,6 +73,14 @@ service-check: ## test the API contract and FAULT_INJECT on the image (needs the
 
 service-limits: ## run the image at 1 CPU / 1 GiB, send 50 requests, report peak memory
 > ./scripts/with_s3.sh scripts/check_service_limits.sh
+
+deploy-app: service-image ## import the service image into k3d and deploy it to namespace app
+> k3d image import parser-service:1 -c $(CLUSTER)
+> kubectl apply -f k8s/app.yaml
+> kubectl -n app rollout status deploy/parser --timeout=300s
+
+app-evidence: ## Task 4 tests: load balancing, pod deletion, rolling update + rollback, cold start x3
+> ./scripts/task4_evidence.sh
 
 status: ## show pods and jobs
 > kubectl get pods -A

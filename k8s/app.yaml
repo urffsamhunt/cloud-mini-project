@@ -1,0 +1,102 @@
+# Inference service in namespace "app" (Task 4).
+# The model weights are NOT in the image: each pod downloads MODEL_URI from SeaweedFS at start-up.
+# Credentials come from the Secret s3-creds (created by scripts/create_secrets.sh), never from this file.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: parser
+  namespace: app
+  labels: {app: parser}
+spec:
+  replicas: 2
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels: {app: parser}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0   # a new pod must be Ready before an old one is removed
+  template:
+    metadata:
+      labels: {app: parser}
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: parser
+          image: parser-service:1
+          imagePullPolicy: IfNotPresent   # image is imported with `k3d image import`
+          ports:
+            - containerPort: 8000
+          lifecycle:
+            preStop:              # keep serving while Service/Ingress endpoints drop this pod
+              exec: {command: ["sleep", "8"]}
+          env:
+            - name: MODEL_VERSION
+              value: v1
+            - name: MODEL_URI
+              value: s3://models/v1/
+            - name: S3_ENDPOINT
+              value: http://seaweedfs.data.svc.cluster.local:8333
+          envFrom:
+            - secretRef: {name: s3-creds}
+          resources:
+            requests: {cpu: 500m, memory: 768Mi}
+            limits: {cpu: "1", memory: 1Gi}
+          startupProbe:            # allows up to 2 min for download + load
+            httpGet: {path: /healthz, port: 8000}
+            periodSeconds: 2
+            failureThreshold: 60
+          livenessProbe:
+            httpGet: {path: /healthz, port: 8000}
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet: {path: /readyz, port: 8000}
+            periodSeconds: 3
+            failureThreshold: 2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: parser
+  namespace: app
+spec:
+  selector: {app: parser}
+  ports:
+    - port: 80
+      targetPort: 8000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: parser
+  namespace: app
+spec:
+  ingressClassName: traefik
+  rules:
+    - http:
+        paths:
+          - path: /parse
+            pathType: Prefix
+            backend:
+              service: {name: parser, port: {number: 80}}
+          - path: /readyz
+            pathType: Exact
+            backend:
+              service: {name: parser, port: {number: 80}}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: parser
+  namespace: app
+spec:
+  scaleTargetRef: {apiVersion: apps/v1, kind: Deployment, name: parser}
+  minReplicas: 1
+  maxReplicas: 2
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target: {type: Utilization, averageUtilization: 70}

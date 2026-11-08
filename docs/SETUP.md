@@ -93,7 +93,17 @@ The image contains no model weights. At start-up the service downloads `MODEL_UR
 from `S3_ENDPOINT`, verifies `files.sha256`, loads the model and only then answers `/readyz` with 200.
 The two check scripts run the container with host networking, so they use ports 18000 and 18001 on the host.
 
-## 7. Tear down
+## 7. Deploy the service to Kubernetes (Task 4)
+
+```bash
+make deploy-app      # imports parser-service:1 into k3d, applies k8s/app.yaml (Deployment x2, Service, Ingress /parse, HPA 1-2 at 70% CPU)
+curl -s -X POST localhost:8080/parse -H 'content-type: application/json' -d '{"text":"weather in paris tomorrow"}'
+make app-evidence    # ~5 min: writes results/task4_*.txt
+```
+
+Models must already be in the `models` bucket (`make train`, which uploads, or `make publish-model`). The Deployment starts on `MODEL_URI=s3://models/v1/`; the rolling update test switches it to v2 and rolls back. Pods drain for 8 s (`preStop`) so the Ingress stops routing to them before they stop.
+
+## 8. Tear down
 
 ```bash
 make down

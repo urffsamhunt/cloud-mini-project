@@ -1,0 +1,5 @@
+== pod deletion: delete one pod while sending 1 request every 0.2 s ==
+deleting parser-565b6d765c-nsfjn at t0
+back to 2 ready replicas after 9.5 s
+status codes during the test:
+    150 200

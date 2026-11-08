@@ -1,0 +1,5 @@
+== cold start: pod scheduled -> Ready, 3 runs (HPA paused by scaling the Deployment directly) ==
+run 1: 7.2 s
+run 2: 7.1 s
+run 3: 22.1 s
+median: 7.2 s

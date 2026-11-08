@@ -53,11 +53,16 @@ Commands that matter for reproduction live in `Makefile` and `docs/SETUP.md`.
 
 Decisions in `clean.py`: records are counted under the first rule they break, in the order (a) to (d); duplicates (exact same command text) are removed afterwards, only among records that passed (a) to (d), keeping the smallest id. Slot values are compared with the command as an exact (case-sensitive) substring. Local-file mode (no `S3_ENDPOINT`) is untested.
 
+33. Task 4 manifests: `k8s/app.yaml` (Deployment 2 replicas, requests 500m/768Mi, limits 1 CPU/1Gi, startup/liveness/readiness probes, maxUnavailable 0, Service, Traefik Ingress for `/parse` and `/readyz`, HPA 1-2 at 70% CPU). `k3d image import parser-service:1 -c cloud` then `kubectl apply`: both pods Ready in about 20 s; `curl localhost:8080/parse` returned 200 with `X-Served-By`. Ran.
+34. `scripts/task4_evidence.sh` (Make target `app-evidence`). First run showed 3 x HTTP 502 and 1 x 000 during the rolling update: Traefik kept sending requests to a pod that had started terminating. Fix: `preStop: sleep 8` and `terminationGracePeriodSeconds: 30`. Rerun: rolling update v1 -> v2 -> rollback, 500 requests, all 200 (456 served by v1, 44 by v2); pod deletion, 150 requests all 200, two ready pods again after 9.5 s; 200 requests split 100/100 between the two pods; cold start (scale 0 -> 1 until Ready) 7.2 s, 7.1 s, 22.1 s, median 7.2 s. Ran; evidence in `results/task4_*.txt`. The load-balancing test itself showed 1 x 502 and 1 x 000 when run right after a manifest rollout, while the old pod was still draining; the script now waits for a settled state first, and the stored load-balancing result is a rerun on a settled deployment (the other three files come from the full run).
+35. Makefile targets `deploy-app`, `app-evidence` added (not run through `make`; the commands were run directly).
+
 ## Open items
 
 - Task 1 report: counts table and a half-page on sharding.
-- Task 3 left: use the image in the cluster (Task 4); unit tests (Task 6).
-- Task 2: GitHub Release asset (the project is not a git repository yet), report text (loss table, three-model comparison, half-page distillation explanation).
+- Task 4 left: HPA scale-up under load (do it with the Task 7 Locust run), single-node limitation statement in the report, `kubectl top pods` under load.
+- Task 3 left: unit tests (Task 6).
+- Task 2: GitHub Release asset (repo is pushed to GitHub; `gh release create` was blocked by the permission classifier because it makes public files, so the user has to run it or allow it), report text (loss table, three-model comparison, half-page distillation explanation).
 - Test `make up` from a fresh clone (needed for Task 6).
 - Final README.md must list build, deploy, test and teardown commands (the current README.md is the original student kit file).
 

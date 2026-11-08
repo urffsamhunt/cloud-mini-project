@@ -1,0 +1,6 @@
+== load balancing: 200 sequential requests via Ingress ==
+status codes:
+    200 200
+requests per pod (X-Served-By):
+    100 parser-565b6d765c-g6zmj
+    100 parser-565b6d765c-t2n25
