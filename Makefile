@@ -6,7 +6,7 @@ CLUSTER ?= cloud
 CONFIG ?= training/config.yaml
 PY_TRAIN := .venv-train/bin/python
 .NOTPARALLEL:
-.PHONY: help check cluster namespaces secrets seaweedfs buckets worker-image up label dataset train-env train train-v2 eval publish-model models test lint service-image service-check service-limits deploy-app app-evidence status down
+.PHONY: help check cluster namespaces secrets seaweedfs buckets worker-image up label dataset train-env train train-v2 eval publish-model models test lint service-image service-check service-limits deploy-app app-evidence loadtest status down
 
 help: ## list targets
 > @grep -E '^[a-z0-9-]+:.*## ' Makefile | awk -F':.*## ' '{printf "  make %-13s %s\n", $$1, $$2}'
@@ -91,6 +91,9 @@ deploy-app: service-image ## import the service image into k3d and deploy it to 
 
 app-evidence: ## Task 4 tests: load balancing, pod deletion, rolling update + rollback, cold start x3
 > ./scripts/task4_evidence.sh
+
+loadtest: ## Task 7: Locust, 4 users, 2 minutes, with kubectl top sampling
+> ./scripts/loadtest.sh
 
 status: ## show pods and jobs
 > kubectl get pods -A
