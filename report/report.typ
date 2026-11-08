@@ -160,11 +160,12 @@ Logit-based distillation is not possible in this project for three reasons. (1) 
 
 #table(columns: (4.2cm, 1fr, 4.4cm), align: left,
   [*Run*], [*Result*], [*Link*],
+  [Release model-v2 (the default), push], [all five jobs green, gitleaks found nothing; validity 100, intent 85, date 79, time 93, full frame 51 (same as locally)], [#link("https://github.com/urffsamhunt/cloud-mini-project/actions/runs/42503863202")[actions/runs/42503863202]],
   [Release model-v1, push], [all five jobs green, gitleaks found nothing; validity 99, intent 85, full frame 49 (same as locally)], [#link("https://github.com/urffsamhunt/cloud-mini-project/actions/runs/42459095876")[actions/runs/42459095876]],
   [Untrained Pythia-70M (manual run, `model_source = untrained`)], [*fails at the quality gate*; the earlier jobs are green], [#link("https://github.com/urffsamhunt/cloud-mini-project/actions/runs/42459268412")[actions/runs/42459268412]],
 )
 
-#measured Both runs are in `results/ci_runs.md`. The workflow default is now `model-v2` (the deployed model); the first run above used v1, before the default was changed. Secret scanning: gitleaks also reported no leak when run locally over the git history, and credentials exist only as Kubernetes Secrets. `AI_USE.md` states which AI tools were used (Claude Code, which wrote most of the code and scripts at my request, and the phi3.5 teacher), what they were used for, how the output was checked (every script was run, counts and checksums compared, one run per claim) and which checks were not done.
+#measured The runs are listed in `results/ci_runs.md`. The workflow default is `model-v2` (the deployed model); the v1 run was made before the default was changed. Secret scanning: gitleaks also reported no leak when run locally over the git history, and credentials exist only as Kubernetes Secrets. `AI_USE.md` states which AI tools were used (Claude Code, which wrote most of the code and scripts at my request, and the phi3.5 teacher), what they were used for, how the output was checked (scripts were run, counts and checksums compared with the saved logs) and which checks were not done.
 = Task 7: Performance, cost and review
 
 *Load test* (#measured; standard command, 4 users, 2 minutes, `localhost:8080`, model v2, two ready replicas; `results/loadtest_*.csv`, `loadtest_headers.json`, `loadtest_console.txt`, `loadtest_top.txt`):
