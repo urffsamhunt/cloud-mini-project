@@ -64,6 +64,7 @@ Decisions in `clean.py`: records are counted under the first rule they break, in
 41. `AI_USE.md` written (draft; the student has to add their own corrections at the end).
 42. Published Releases `model-v1` and `model-v2` (by the user; asset digests on GitHub equal `release/model-<v>.sha256`). Pushed to GitHub (git's configured `credential-secret` helper does not exist on this machine, so the push used `-c credential.helper='!gh auth git-credential'`). CI run 1 (release model-v1): all five jobs green, gitleaks reported nothing, CI scores equal the local ones (99/85/49). CI run 2 (`model_source=untrained`): only the quality gate failed. Links in `results/ci_runs.md`. Ran on GitHub.
 43. Raw teacher shards exported from SeaweedFS to `data/teacher/` (520 KB, committed) before deleting the cluster. `worker/clean.py --shards data/teacher` (local-file mode, previously untested) reproduces the same counts and SHA-256 `dfcdc41d...`. Ran.
+44. `make down` run (deletes the cluster): works. Fresh clone of the GitHub repo into a new directory, then `make up`: the first attempt hung for 12 minutes because the v2 Release download stalled at 181 MB (`urlretrieve` has no timeout). Fixed in `scripts/fetch_models.py` (30 s timeout, up to 8 retries, resume with HTTP Range, partial files are re-checked against the committed SHA-256). Second `make up` in the same clone resumed the partial file: 2 min 34 s in total, both archives checksum OK, both uploaded and verified, 2 parser pods Ready, `POST localhost:8080/parse` returned 200 with `X-Model-Version: v1`. So from a clone: `git clone ... && cd ... && make up` (2 commands). Ran. Not tested: the retry path when the connection fails outright rather than stalls. The new cluster's `datasets` bucket holds only `commands_pool.jsonl` (teacher shards and v1 data are not re-created by `make up`; use `make label` and `make dataset`, or the copies in `data/`).
 
 ## Open items
 
@@ -71,7 +72,7 @@ Decisions in `clean.py`: records are counted under the first rule they break, in
 - Task 4 left: HPA scale-up under load (do it with the Task 7 Locust run), single-node limitation statement in the report, `kubectl top pods` under load.
 - Task 3 left: unit tests (Task 6).
 - Task 2: GitHub Release asset (repo is pushed to GitHub; `gh release create` was blocked by the permission classifier because it makes public files, so the user has to run it or allow it), report text (loss table, three-model comparison, half-page distillation explanation).
-- Task 6: publish the Releases, push, run the workflow twice (release model: passes; untrained: fails at the gate) and keep the links; test `make down` then `make up` from a fresh clone (two commands after the clone).
+- Task 6: done except the report text (include links from `results/ci_runs.md`).
 - Final README.md must list build, deploy, test and teardown commands (the current README.md is the original student kit file).
 
 ## Known limitations
