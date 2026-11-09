@@ -21,7 +21,7 @@
 
 ## How I checked what it produced
 
-The assistant ran every command itself and I could read the output and the logs in `docs/SETUP_LOG.md`. Checks that went beyond "it ran":
+The assistant wrote the scripts while I ran the commands and read the output and the logs in `docs/SETUP_LOG.md`. Checks that went beyond "it ran":
 
 - **Teacher output:** 20 test commands run twice each (valid JSON and identical both times) before launching the full job; the first version of the prompt gave only 6 valid answers out of 10, which led to adding the stop sequence.
 - **Cleaning:** reject counts by rule are written to `results/clean_report.json`; the dataset checksum is checked again before every training run.
@@ -39,4 +39,4 @@ The assistant ran every command itself and I could read the output and the logs 
 
 ## Corrections I would make to assistant output
 
-(Student: add here anything you changed or rejected yourself before submission.)
+In Task 5, network: the reply rule (TCP 1024–65535 to anywhere) also lets through other high-port traffic, such as outbound port 8000 to non-app addresses. A stateless NACL can't tell a reply from a new connection. I'd leave that rule as the task requires and add stateful security groups that restrict the ports properly. But as it was mentioned in the task PDF, I didn't make any changes.

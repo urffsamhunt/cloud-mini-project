@@ -21,7 +21,7 @@
   #v(2pt)
   #text(size: 10.5pt)[CS3081 Cloud Computing, mini project report] \
   #v(2pt)
-  Name: *[YOUR NAME]* #h(1em) Roll number: *[YOUR ROLL NUMBER]* #h(1em)
+  Name: *Sameer Patel* #h(1em) Roll number: *230101040* #h(1em)
   Repository: #link("https://github.com/urffsamhunt/cloud-mini-project")[github.com/urffsamhunt/cloud-mini-project]
 ]
 
